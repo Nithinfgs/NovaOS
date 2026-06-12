@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovaOS - Web Desktop</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height:100vh; overflow:hidden;
+    background: linear-gradient(135deg,#2b1055,#7597de);
+    background-size: 400% 400%;
+    animation: bgshift 20s ease infinite;
+    color:#fff;
+  }
+  @keyframes bgshift {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+  }
+  /* Desktop icons */
+  #desktop { position:relative; width:100%; height:calc(100vh - 48px); }
+  .desktop-icon {
+    position:absolute; width:80px; text-align:center; cursor:pointer;
+    padding:8px; border-radius:8px;
+  }
+  .desktop-icon:hover { background:rgba(255,255,255,0.15); }
+  .desktop-icon .icon { font-size:32px; display:block; margin-bottom:4px; }
+  .desktop-icon span.label { font-size:12px; text-shadow:1px 1px 2px #000; }
+
+  /* Windows */
+  .window {
+    position:absolute; min-width:240px; min-height:160px;
+    background:rgba(30,30,46,0.92);
+    border:1px solid rgba(255,255,255,0.2);
+    border-radius:10px; overflow:hidden;
+    box-shadow:0 8px 32px rgba(0,0,0,0.4);
+    backdrop-filter: blur(6px);
+    display:flex; flex-direction:column;
+  }
+  .window.minimized { display:none; }
+  .titlebar {
+    background:rgba(255,255,255,0.08);
+    padding:8px 10px; display:flex; align-items:center; justify-content:space-between;
+    cursor:move; font-size:13px; font-weight:bold;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+  }
+  .titlebar .controls button {
+    background:none; border:none; color:#fff; font-size:14px; cursor:pointer;
+    width:24px; height:24px; border-radius:5px; margin-left:2px;
+  }
+  .titlebar .controls button:hover { background:rgba(255,255,255,0.2); }
+  .window-body { flex:1; padding:12px; overflow:auto; font-size:14px; }
+  .window-body a { color:#9ad0ff; }
+  .resize-handle {
+    position:absolute; right:0; bottom:0; width:14px; height:14px; cursor:nwse-resize;
+  }
+
+  /* Taskbar */
+  #taskbar {
+    position:fixed; bottom:0; left:0; right:0; height:48px;
+    background:rgba(20,20,35,0.85); backdrop-filter: blur(8px);
+    display:flex; align-items:center; padding:0 8px; gap:8px;
+    border-top:1px solid rgba(255,255,255,0.1); z-index:9999;
+  }
+  #start-btn {
+    background:linear-gradient(135deg,#7f5af0,#2cb67d);
+    border:none; color:#fff; font-weight:bold; padding:8px 16px;
+    border-radius:8px; cursor:pointer; font-size:14px;
+  }
+  #task-items { display:flex; gap:6px; flex:1; overflow-x:auto; }
+  .task-item {
+    background:rgba(255,255,255,0.1); border:none; color:#fff;
+    padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px;
+    white-space:nowrap;
+  }
+  .task-item.active { background:rgba(127,90,240,0.5); }
+  #clock { font-size:13px; padding:0 12px; }
+
+  /* Start menu */
+  #start-menu {
+    position:fixed; bottom:52px; left:8px; width:220px;
+    background:rgba(25,25,40,0.95); border:1px solid rgba(255,255,255,0.15);
+    border-radius:10px; padding:8px; display:none; flex-direction:column; gap:4px;
+    backdrop-filter: blur(8px); z-index:10000;
+  }
+  #start-menu.open { display:flex; }
+  #start-menu button {
+    background:none; border:none; color:#fff; text-align:left; padding:10px;
+    border-radius:6px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:10px;
+  }
+  #start-menu button:hover { background:rgba(255,255,255,0.1); }
+
+  /* Theme variants */
+  body.theme-light { background: linear-gradient(135deg,#fceabb,#f8b500); }
+  body.theme-dark { background: linear-gradient(135deg,#0f0c29,#302b63,#24243e); }
+  body.theme-ocean { background: linear-gradient(135deg,#005c97,#363795); }
+
+  /* Notepad */
+  textarea#notepad-area {
+    width:100%; height:100%; min-height:120px; resize:none;
+    background:rgba(0,0,0,0.25); color:#fff; border:1px solid rgba(255,255,255,0.15);
+    border-radius:6px; padding:8px; font-family:monospace; font-size:13px;
+  }
+  .save-status { font-size:11px; opacity:0.7; margin-top:4px; }
+
+  /* Calculator */
+  #calc-display {
+    width:100%; padding:8px; font-size:18px; text-align:right;
+    background:rgba(0,0,0,0.3); border:none; border-radius:6px; color:#fff; margin-bottom:6px;
+  }
+  .calc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+  .calc-grid button {
+    padding:10px; font-size:14px; border:none; border-radius:6px;
+    background:rgba(255,255,255,0.1); color:#fff; cursor:pointer;
+  }
+  .calc-grid button:hover { background:rgba(255,255,255,0.2); }
+  .calc-grid button.op { background:rgba(127,90,240,0.4); }
+
+  ::-webkit-scrollbar { width:8px; }
+  ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.2); border-radius:4px; }
+</style>
+</head>
+<body>
+
+<div id="desktop">
+  <div class="desktop-icon" style="top:20px; left:20px;" ondblclick="openWindow('about')">
+    <span class="icon">🖥️</span><span class="label">About</span>
+  </div>
+  <div class="desktop-icon" style="top:120px; left:20px;" ondblclick="openWindow('notepad')">
+    <span class="icon">📝</span><span class="label">Notepad</span>
+  </div>
+  <div class="desktop-icon" style="top:220px; left:20px;" ondblclick="openWindow('calculator')">
+    <span class="icon">🧮</span><span class="label">Calculator</span>
+  </div>
+  <div class="desktop-icon" style="top:320px; left:20px;" ondblclick="openWindow('devlog')">
+    <span class="icon">📓</span><span class="label">Devlog</span>
+  </div>
+  <div class="desktop-icon" style="top:420px; left:20px;" ondblclick="openWindow('settings')">
+    <span class="icon">⚙️</span><span class="label">Settings</span>
+  </div>
+</div>
+
+<div id="start-menu">
+  <button onclick="openWindow('about')">🖥️ About NovaOS</button>
+  <button onclick="openWindow('notepad')">📝 Notepad</button>
+  <button onclick="openWindow('calculator')">🧮 Calculator</button>
+  <button onclick="openWindow('devlog')">📓 Devlog</button>
+  <button onclick="openWindow('settings')">⚙️ Settings</button>
+</div>
+
+<div id="taskbar">
+  <button id="start-btn" onclick="toggleStart()">🌟 NovaOS</button>
+  <div id="task-items"></div>
+  <div id="clock">--:--</div>
+</div>
+
+<script>
+let zCounter = 10;
+let openWindows = {};
+
+const windowConfigs = {
+  about: {
+    title: "🖥️ About NovaOS",
+    width: 360, height: 230,
+    content: `
+      <h3 style="margin-bottom:8px;">Welcome to NovaOS!</h3>
+      <p>NovaOS is a fully custom web-based desktop, built from scratch
+      as part of the WebOS workshop mission.</p>
+      <p style="margin-top:8px;">Drag windows around, resize them, open
+      multiple apps, and explore the Settings app to customize your theme!</p>
+      <p style="margin-top:8px; opacity:0.7; font-size:12px;">Version 1.0 — No login required, just click and explore.</p>
+    `
+  },
+  notepad: {
+    title: "📝 Notepad",
+    width: 320, height: 240,
+    content: `
+      <textarea id="notepad-area" placeholder="Type your notes here... they autosave!"></textarea>
+      <div class="save-status" id="save-status">Not saved yet</div>
+    `
+  },
+  calculator: {
+    title: "🧮 Calculator",
+    width: 240, height: 300,
+    content: `
+      <input id="calc-display" readonly value="0">
+      <div class="calc-grid">
+        <button onclick="calcInput('7')">7</button>
+        <button onclick="calcInput('8')">8</button>
+        <button onclick="calcInput('9')">9</button>
+        <button class="op" onclick="calcInput('/')">÷</button>
+        <button onclick="calcInput('4')">4</button>
+        <button onclick="calcInput('5')">5</button>
+        <button onclick="calcInput('6')">6</button>
+        <button class="op" onclick="calcInput('*')">×</button>
+        <button onclick="calcInput('1')">1</button>
+        <button onclick="calcInput('2')">2</button>
+        <button onclick="calcInput('3')">3</button>
+        <button class="op" onclick="calcInput('-')">−</button>
+        <button onclick="calcInput('0')">0</button>
+        <button onclick="calcInput('.')">.</button>
+        <button onclick="calcClear()">C</button>
+        <button class="op" onclick="calcInput('+')">+</button>
+        <button class="op" style="grid-column:span 4;" onclick="calcEquals()">=</button>
+      </div>
+    `
+  },
+  devlog: {
+    title: "📓 Devlog",
+    width: 380, height: 320,
+    content: `
+      <h3 style="margin-bottom:8px;">Devlog Entries</h3>
+      <p style="margin-bottom:6px;"><b>Day 1 —</b> Set up the basic page structure, background gradient,
+      and got my first window dragging around the screen. Felt great seeing it move!</p>
+      <p style="margin-bottom:6px;"><b>Day 2 —</b> Added a taskbar at the bottom with a Start menu,
+      desktop icons, and the ability to open/close/minimize multiple windows at once.</p>
+      <p style="margin-bottom:6px;"><b>Day 3 —</b> Built out real apps: a Notepad with autosave using
+      localStorage, and a working Calculator. Also added window resizing.</p>
+      <p style="margin-bottom:6px;"><b>Day 4 —</b> Polished the look with a custom animated gradient
+      background, glassy blur effect on windows, and added a Settings app to
+      switch between themes — my extra feature beyond the guide!</p>
+    `
+  },
+  settings: {
+    title: "⚙️ Settings",
+    width: 300, height: 220,
+    content: `
+      <h3 style="margin-bottom:10px;">Choose a theme</h3>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <button onclick="setTheme('default')" class="task-item">🌌 Default Galaxy</button>
+        <button onclick="setTheme('light')" class="task-item">☀️ Light Mode</button>
+        <button onclick="setTheme('dark')" class="task-item">🌑 Dark Mode</button>
+        <button onclick="setTheme('ocean')" class="task-item">🌊 Ocean Mode</button>
+      </div>
+      <p style="margin-top:12px; font-size:12px; opacity:0.7;">Your theme choice is saved automatically.</p>
+    `
+  }
+};
+
+function openWindow(id) {
+  closeStart();
+  if (openWindows[id]) {
+    const win = document.getElementById('win-' + id);
+    win.classList.remove('minimized');
+    bringToFront(id);
+    updateTaskbar();
+    return;
+  }
+  const cfg = windowConfigs[id];
+  const win = document.createElement('div');
+  win.className = 'window';
+  win.id = 'win-' + id;
+  win.style.width = cfg.width + 'px';
+  win.style.height = cfg.height + 'px';
+  win.style.left = (60 + Object.keys(openWindows).length * 30) + 'px';
+  win.style.top = (40 + Object.keys(openWindows).length * 30) + 'px';
+  win.style.zIndex = ++zCounter;
+
+  win.innerHTML = `
+    <div class="titlebar">
+      <span>${cfg.title}</span>
+      <div class="controls">
+        <button onclick="minimizeWindow('${id}')">_</button>
+        <button onclick="closeWindow('${id}')">✕</button>
+      </div>
+    </div>
+    <div class="window-body">${cfg.content}</div>
+    <div class="resize-handle"></div>
+  `;
+  document.getElementById('desktop').appendChild(win);
+  openWindows[id] = true;
+  makeDraggable(win);
+  makeResizable(win);
+  win.addEventListener('mousedown', () => bringToFront(id));
+
+  if (id === 'notepad') initNotepad();
+  if (id === 'calculator') calcClear();
+  if (id === 'terminal') initTerminal();
+  enableSnapping(win);
+
+  updateTaskbar();
+}
+
+function closeWindow(id) {
+  const win = document.getElementById('win-' + id);
+  if (win) win.remove();
+  delete openWindows[id];
+  updateTaskbar();
+}
+
+function minimizeWindow(id) {
+  const win = document.getElementById('win-' + id);
+  win.classList.toggle('minimized');
+  updateTaskbar();
+}
+
+function bringToFront(id) {
+  const win = document.getElementById('win-' + id);
+  if (win) win.style.zIndex = ++zCounter;
+  updateTaskbar();
+}
+
+function updateTaskbar() {
+  const container = document.getElementById('task-items');
+  container.innerHTML = '';
+  Object.keys(openWindows).forEach(id => {
+    const btn = document.createElement('button');
+    btn.className = 'task-item';
+    btn.textContent = windowConfigs[id].title;
+    btn.onclick = () => {
+      const win = document.getElementById('win-' + id);
+      win.classList.remove('minimized');
+      bringToFront(id);
+    };
+    container.appendChild(btn);
+  });
+}
+
+/* Dragging */
+function makeDraggable(win) {
+  const titlebar = win.querySelector('.titlebar');
+  let offsetX, offsetY, dragging = false;
+
+  titlebar.addEventListener('mousedown', e => {
+    dragging = true;
+    offsetX = e.clientX - win.offsetLeft;
+    offsetY = e.clientY - win.offsetTop;
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    win.style.left = (e.clientX - offsetX) + 'px';
+    win.style.top = Math.max(0, e.clientY - offsetY) + 'px';
+  });
+  document.addEventListener('mouseup', () => dragging = false);
+
+  // touch support
+  titlebar.addEventListener('touchstart', e => {
+    dragging = true;
+    const t = e.touches[0];
+    offsetX = t.clientX - win.offsetLeft;
+    offsetY = t.clientY - win.offsetTop;
+  });
+  document.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const t = e.touches[0];
+    win.style.left = (t.clientX - offsetX) + 'px';
+    win.style.top = Math.max(0, t.clientY - offsetY) + 'px';
+  });
+  document.addEventListener('touchend', () => dragging = false);
+}
+
+/* Resizing */
+function makeResizable(win) {
+  const handle = win.querySelector('.resize-handle');
+  let resizing = false, startX, startY, startW, startH;
+  handle.addEventListener('mousedown', e => {
+    resizing = true;
+    startX = e.clientX; startY = e.clientY;
+    startW = win.offsetWidth; startH = win.offsetHeight;
+    e.stopPropagation();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!resizing) return;
+    win.style.width = Math.max(220, startW + (e.clientX - startX)) + 'px';
+    win.style.height = Math.max(150, startH + (e.clientY - startY)) + 'px';
+  });
+  document.addEventListener('mouseup', () => resizing = false);
+}
+
+/* Start menu */
+function toggleStart() {
+  document.getElementById('start-menu').classList.toggle('open');
+}
+function closeStart() {
+  document.getElementById('start-menu').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  const menu = document.getElementById('start-menu');
+  const btn = document.getElementById('start-btn');
+  if (menu.classList.contains('open') && !menu.contains(e.target) && e.target !== btn) {
+    menu.classList.remove('open');
+  }
+});
+
+/* Clock */
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* Notepad with autosave */
+function initNotepad() {
+  const area = document.getElementById('notepad-area');
+  const status = document.getElementById('save-status');
+  const saved = localStorage.getItem('novaos-notes');
+  if (saved) area.value = saved;
+  area.addEventListener('input', () => {
+    localStorage.setItem('novaos-notes', area.value);
+    status.textContent = 'Saved ✓ ' + new Date().toLocaleTimeString();
+  });
+}
+
+/* Calculator */
+let calcExpr = '';
+function calcInput(val) {
+  calcExpr += val;
+  document.getElementById('calc-display').value = calcExpr;
+}
+function calcClear() {
+  calcExpr = '';
+  document.getElementById('calc-display').value = '0';
+}
+function calcEquals() {
+  try {
+    const result = Function('"use strict"; return (' + calcExpr + ')')();
+    document.getElementById('calc-display').value = result;
+    calcExpr = String(result);
+  } catch {
+    document.getElementById('calc-display').value = 'Error';
+    calcExpr = '';
+  }
+}
+
+/* Theme switching - extra feature beyond the guide */
+function setTheme(theme) {
+  document.body.className = '';
+  if (theme !== 'default') document.body.classList.add('theme-' + theme);
+  localStorage.setItem('novaos-theme', theme);
+}
+const savedTheme = localStorage.getItem('novaos-theme');
+if (savedTheme) setTheme(savedTheme);
+
+/* Context menu */
+const ctxMenu = document.createElement('div');
+ctxMenu.id = 'ctx-menu';
+ctxMenu.style.cssText = 'position:fixed; display:none; background:rgba(25,25,40,0.95); border:1px solid rgba(255,255,255,0.15); border-radius:8px; padding:6px; z-index:99999; backdrop-filter:blur(8px);';
+ctxMenu.innerHTML = `
+  <button class="task-item" style="display:block; width:160px; text-align:left; margin-bottom:4px;" onclick="openWindow('terminal')">💻 Open Terminal</button>
+  <button class="task-item" style="display:block; width:160px; text-align:left; margin-bottom:4px;" onclick="openWindow('settings')">⚙️ Settings</button>
+  <button class="task-item" style="display:block; width:160px; text-align:left;" onclick="refreshDesktop()">🔄 Refresh</button>
+`;
+document.body.appendChild(ctxMenu);
+document.getElementById('desktop').addEventListener('contextmenu', e => {
+  e.preventDefault();
+  ctxMenu.style.left = e.clientX + 'px';
+  ctxMenu.style.top = e.clientY + 'px';
+  ctxMenu.style.display = 'block';
+});
+document.addEventListener('click', () => ctxMenu.style.display = 'none');
+function refreshDesktop(){ ctxMenu.style.display='none'; }
+
+/* Terminal app */
+windowConfigs.terminal = {
+  title: "💻 Terminal",
+  width: 380, height: 280,
+  content: `
+    <div id="term-output" style="font-family:monospace; font-size:12px; height:180px; overflow-y:auto; background:rgba(0,0,0,0.4); padding:6px; border-radius:6px; margin-bottom:6px;">NovaOS Terminal v1.0
+Type 'help' for commands.
+</div>
+    <input id="term-input" style="width:100%; font-family:monospace; font-size:12px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:#fff; padding:6px;" placeholder="type a command...">
+  `
+};
+
+function initTerminal() {
+  const input = document.getElementById('term-input');
+  const output = document.getElementById('term-output');
+  input.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const cmd = input.value.trim();
+    output.textContent += '\n> ' + cmd;
+    switch (cmd.toLowerCase()) {
+      case 'help':
+        output.textContent += '\nCommands: help, about, time, theme [default|light|dark|ocean], open [app], clear, joke';
+        break;
+      case 'about':
+        output.textContent += '\nNovaOS - a custom web desktop environment.';
+        break;
+      case 'time':
+        output.textContent += '\n' + new Date().toString();
+        break;
+      case 'clear':
+        output.textContent = 'NovaOS Terminal v1.0\n';
+        break;
+      case 'joke':
+        output.textContent += '\nWhy did the developer go broke? Because they used up all their cache.';
+        break;
+      default:
+        if (cmd.toLowerCase().startsWith('theme ')) {
+          const t = cmd.split(' ')[1];
+          if (['default','light','dark','ocean'].includes(t)) {
+            setTheme(t);
+            output.textContent += '\nTheme set to ' + t;
+          } else {
+            output.textContent += '\nUnknown theme: ' + t;
+          }
+        } else if (cmd.toLowerCase().startsWith('open ')) {
+          const app = cmd.split(' ')[1];
+          if (windowConfigs[app]) {
+            openWindow(app);
+            output.textContent += '\nOpening ' + app + '...';
+          } else {
+            output.textContent += '\nNo such app: ' + app;
+          }
+        } else if (cmd.trim() !== '') {
+          output.textContent += '\nUnknown command: ' + cmd;
+        }
+    }
+    input.value = '';
+    output.scrollTop = output.scrollHeight;
+  });
+}
+
+/* Window snapping (drag to edges) */
+function enableSnapping(win) {
+  document.addEventListener('mouseup', () => {
+    const w = window.innerWidth, h = window.innerHeight - 48;
+    const rect = win.getBoundingClientRect();
+    if (rect.left < 10) {
+      win.style.left = '0px'; win.style.top='0px';
+      win.style.width = (w/2) + 'px'; win.style.height = h + 'px';
+    } else if (rect.right > w - 10) {
+      win.style.left = (w/2) + 'px'; win.style.top='0px';
+      win.style.width = (w/2) + 'px'; win.style.height = h + 'px';
+    }
+  }, { once:false });
+}
+
+/* Keyboard shortcuts */
+document.addEventListener('keydown', e => {
+  if (e.altKey && e.key.toLowerCase() === 't') openWindow('terminal');
+  if (e.altKey && e.key.toLowerCase() === 'n') openWindow('notepad');
+  if (e.key === 'Escape') closeStart();
+});
+
+/* Desktop clock widget (extra) */
+const clockWidget = document.createElement('div');
+clockWidget.style.cssText = 'position:absolute; top:20px; right:30px; text-align:right; text-shadow:2px 2px 6px rgba(0,0,0,0.5); pointer-events:none;';
+clockWidget.innerHTML = '<div id="big-clock" style="font-size:48px; font-weight:bold;">--:--</div><div id="big-date" style="font-size:14px; opacity:0.85;">--</div>';
+document.getElementById('desktop').appendChild(clockWidget);
+function updateBigClock() {
+  const now = new Date();
+  document.getElementById('big-clock').textContent = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  document.getElementById('big-date').textContent = now.toLocaleDateString([], {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+}
+setInterval(updateBigClock, 1000);
+updateBigClock();
+
+/* Open About on first load */
+window.addEventListener('load', () => openWindow('about'));
+</script>
+
+</body>
+</html>
