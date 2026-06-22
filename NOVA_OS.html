@@ -2541,4 +2541,265 @@ Apps.terminal = function(){
         println(folder.children.map(c=> c.type==='folder' ? c.name+'/' : c.name).join('   '));
         break;
       case 'pwd':
-        println('
+        println('/'+state.cwd.join('/'));
+        break;
+      case 'cd': {
+        if(args.length===0 || args[0]==='/' ){ state.cwd=[]; updatePrompt(); break; }
+        if(args[0]==='..'){ state.cwd.pop(); updatePrompt(); break; }
+        const target = folder && folder.children.find(c=>c.name===args[0] && c.type==='folder');
+        if(target){ state.cwd.push(args[0]); updatePrompt(); }
+        else println(`cd: no such directory: ${args[0]}`, 'var(--danger)');
+        break;
+      }
+      case 'mkdir':
+        if(args.length===0){ println('mkdir: missing folder name', 'var(--danger)'); break; }
+        if(FS.createFolder(state.cwd, args[0])) println(`Folder created: ${args[0]}`);
+        else println(`mkdir: cannot create '${args[0]}' (already exists)`, 'var(--danger)');
+        break;
+      case 'touch':
+        if(args.length===0){ println('touch: missing file name', 'var(--danger)'); break; }
+        if(FS.createFile(state.cwd, args[0], '', args[0].includes('.')?args[0].split('.').pop():'txt')) println(`File created: ${args[0]}`);
+        else println(`touch: cannot create '${args[0]}' (already exists)`, 'var(--danger)');
+        break;
+      case 'cat': {
+        if(args.length===0){ println('cat: missing file name', 'var(--danger)'); break; }
+        const f = folder && folder.children.find(c=>c.name===args[0] && c.type==='file');
+        if(f) println(f.content || '(empty file)');
+        else println(`cat: ${args[0]}: No such file`, 'var(--danger)');
+        break;
+      }
+      case 'rm':
+        if(args.length===0){ println('rm: missing name', 'var(--danger)'); break; }
+        if(FS.deleteItem(state.cwd, args[0])) println(`Removed: ${args[0]}`);
+        else println(`rm: cannot remove '${args[0]}': No such file or directory`, 'var(--danger)');
+        break;
+      case 'echo': {
+        const joined = args.join(' ');
+        const gtIdx = joined.indexOf('>');
+        if(gtIdx>=0){
+          const content = joined.slice(0,gtIdx).trim();
+          const fname = joined.slice(gtIdx+1).trim();
+          if(!fname){ println('echo: missing filename after >', 'var(--danger)'); break; }
+          const folderNow = FS.getFolder(state.cwd);
+          const existing = folderNow.children.find(c=>c.name===fname && c.type==='file');
+          if(existing){ FS.updateFile(state.cwd, fname, content); println(`Wrote to ${fname}`); }
+          else if(FS.createFile(state.cwd, fname, content, fname.includes('.')?fname.split('.').pop():'txt')) println(`Created ${fname}`);
+        } else {
+          println(joined);
+        }
+        break;
+      }
+      case 'open': {
+        const appName = args.join(' ').toLowerCase();
+        const app = APP_REGISTRY.find(a=> a.id===appName || a.name.toLowerCase()===appName || a.name.toLowerCase().replace(/\s+/g,'')===appName);
+        if(app){ openApp(app.id); println(`Launching ${app.name}...`); }
+        else println(`open: unknown app '${args.join(' ')}'`, 'var(--danger)');
+        break;
+      }
+      case 'ai': {
+        const cmdText = args.join(' ');
+        if(!cmdText){ println('ai: provide a command, e.g. ai create a folder called Test', 'var(--danger)'); break; }
+        const reply = handleAICommand(cmdText);
+        println('Nexus: '+reply, 'var(--accent-2)');
+        break;
+      }
+      case 'whoami': println('guest@nova-os'); break;
+      case 'date': println(new Date().toString()); break;
+      case 'clear': out.innerHTML=''; break;
+      case 'weather': {
+        const conditions = ['Partly cloudy','Sunny','Light rain','Overcast','Clear skies','Misty morning'];
+        const temp = 14 + Math.floor(Math.random()*14);
+        println([
+          `┌─────────────────────────┐`,
+          `  ${conditions[Math.floor(Math.random()*conditions.length)]}, ${temp}°C`,
+          `  Feels like ${temp-2}°C · Humidity 54%`,
+          `  Wind 9 km/h NW`,
+          `└─────────────────────────┘`,
+          '(simulated — NexusOS has no real network access)'
+        ].join('\n'));
+        break;
+      }
+      case 'play': {
+        const song = args.join(' ') || 'ambient hum';
+        if(!AMBIENT.on) toggleAmbient();
+        println(`♪ Now playing: ${song} (ambient synth)`);
+        break;
+      }
+      case 'theme': {
+        const key = (args[0]||'').toLowerCase();
+        const match = Object.entries(THEMES).find(([k,v])=> k===key || v.name.toLowerCase().includes(key));
+        if(!match){ println(`theme: unknown theme '${args[0]||''}'. Try: ${Object.keys(THEMES).join(', ')}`, 'var(--danger)'); break; }
+        if(!isRewardUnlocked('theme', match[0])){
+          const lvl = LEVEL_REWARDS.find(r=>r.type==='theme'&&r.key===match[0])?.level;
+          println(`theme: "${match[1].name}" is locked. Reach Level ${lvl} to unlock it.`, 'var(--danger)');
+          break;
+        }
+        applyTheme(match[0]);
+        println(`Theme switched to ${match[1].name}.`);
+        break;
+      }
+      case 'fortune': {
+        if(!isRewardUnlocked('command','fortune')){ println('command not found: fortune (type "help")', 'var(--danger)'); break; }
+        const fortunes = [
+          'A small folder today grows into a great archive tomorrow.',
+          'The note you almost didn\'t write was the one worth keeping.',
+          'Memory rewards the curious.',
+          'Every constellation starts with a single star.',
+          'Tend your files like a garden — a little, often.',
+        ];
+        println(fortunes[Math.floor(Math.random()*fortunes.length)], 'var(--accent-3)');
+        break;
+      }
+      case 'matrix': {
+        if(!isRewardUnlocked('command','matrix')){ println('command not found: matrix (type "help")', 'var(--danger)'); break; }
+        println('Wake up, Nexus...', 'var(--accent)');
+        const chars = '01アイウエオ';
+        let line='';
+        for(let i=0;i<60;i++) line += chars[Math.floor(Math.random()*chars.length)];
+        println(line, 'var(--accent-2)');
+        break;
+      }
+      case 'fireworks': {
+        if(!isRewardUnlocked('command','fireworks')){ println('command not found: fireworks (type "help")', 'var(--danger)'); break; }
+        println('� ✨ 🎆 ✨ 🎉   Congratulations on Level '+levelFromXLP(STATS.xp)+'!   � ✨ 🎆 ✨ 🎉', 'vafr(--accent-3)');
+        break;
+      }
+      case 'neofetch':
+        println([
+          '       ◈       nova-os',
+          '     ◈◈◈◈     ----------',
+          '   ◈◈◈◈◈◈◈   OS: NexusOS v3.0',
+          '     ◈◈◈◈     Kernel: vFS 2.0',
+          '       ◈       Shell: nova-sh',
+          '               Theme: '+SETTINGS.theme,
+          '               XP: '+STATS.xp+' (Level '+levelFromXP(STATS.xp)+')'
+        ].join('\n'));
+        break;
+      default:
+        println(`command not found: ${cmd} (type "help")`, 'var(--danger)');
+    }
+  }
+
+  input.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){
+      const val = input.value;
+      input.value='';
+      run(val);
+    }
+  });
+  setTimeout(()=>input.focus(), 100);
+
+  WM.create({id:'terminal', title:'Terminal', icon:'⌨️', width:620, height:420, body});
+  document.getElementById('win-terminal')?.addEventListener('mousedown', ()=> setTimeout(()=>input.focus(),0));
+};
+
+
+/* =========================================================
+   AUTOMATION ENGINE
+   ========================================================= */
+const AUTO = { flows: null };
+function initAuto(){
+  const saved = loadState();
+  if(saved && saved.automations){ AUTO.flows = saved.automations; return; }
+  AUTO.flows = [
+    {id:'a1', triggerType:'note_created', trigger:'When a new note is created', actionType:'tag_date', action:'Add a date tag to the note', on:true},
+    {id:'a2', triggerType:'calendar_event_added', trigger:'When a calendar event is added', actionType:'create_reminder', action:'Create a reminder note', on:true},
+    {id:'a3', triggerType:'file_created', trigger:'When a new file is created', actionType:'notify', action:'Show a notification', on:true},
+  ];
+}
+initAuto();
+
+// Execute automations matching a trigger type
+function runAutomationsFor(triggerType, payload={}){
+  AUTO.flows.filter(f=>f.on && f.triggerType===triggerType).forEach(f=>{
+    switch(f.actionType){
+      case 'tag_date': {
+        const n = NOTES.list[NOTES.list.length-1];
+        if(n && !stripHtml(n.body).includes('[Created:')){
+          n.body = `<div>[Created: ${new Date().toLocaleDateString()}]</div>` + (n.body||'');
+          saveState();
+        }
+        logActivity('automation', `Automation "${f.trigger}" → ${f.action}`);
+        break;
+      }
+      case 'create_reminder': {
+        const n = {id:'n'+Date.now(), title:'Reminder: '+(payload.text||'Event'), body:`Don't forget: ${payload.text||''}`, updated:Date.now(), created:Date.now(), tags:[]};
+        NOTES.list.push(n); saveState();
+        notify(`� Reminder niote created: "${n.title}"`, [
+          {label:'Open', primary:true, onClick:()=>{ NOTES.activeId=n.id; openApp('notes'); }},
+        ], 'note');
+        logActivity('automation', `Automation "${f.trigger}" → ${f.action}`);
+        break;
+      }
+      case 'notify':
+        notify(`⚡ Automation: ${f.action}`, [
+          {label:'View Automations', primary:true, onClick:()=>openApp('automations')},
+        ], 'automation');
+        logActivity('automation', `Automation "${f.trigger}" → ${f.action}`);
+        break;
+      case 'open_explorer':
+        openApp('explorer');
+        logActivity('automation', `Automation "${f.trigger}" → ${f.action}`);
+        break;
+    }
+  });
+}
+
+const AUTOMATION_TRIGGER_TYPES = [
+  {id:'note_created', label:'New note created'},
+  {id:'file_created', label:'New file created'},
+  {id:'calendar_event_added', label:'Calendar event added'},
+];
+const AUTOMATION_ACTION_TYPES = [
+  {id:'tag_date', label:'Add a date tag'},
+  {id:'create_reminder', label:'Create a reminder note'},
+  {id:'notify', label:'Show a notification'},
+  {id:'open_explorer', label:'Open File Explorer'},
+];
+
+Apps.automations = function(){
+  const body = document.createElement('div');
+  body.className = 'flow-canvas';
+  body.innerHTML = `<div class="app-h">⚡ Automation Engine</div><div class="muted" style="margin-bottom:14px;">When a trigger fires, Nexus performs the linked action automatically. Toggle flows on/off, or build a new one.</div>
+    <div id="flowList"></div>
+    <div class="flow-card" style="flex-direction:column; align-items:stretch; gap:10px;">
+      <div class="flow-step"><div class="lbl">New Automation</div></div>
+      <div style="display:flex; gap:10px;">
+        <select id="newTrigger" style="flex:1;">${AUTOMATION_TRIGGER_TYPES.map(t=>`<option value="${t.id}">${t.label}</option>`).join('')}</select>
+        <span class="flow-arrow">→</span>
+        <select id="newAction" style="flex:1;">${AUTOMATION_ACTION_TYPES.map(a=>`<option value="${a.id}">${a.label}</option>`).join('')}</select>
+      </div>
+      <button class="btn primary" id="addFlow">+ Create Automation</button>
+    </div>`;
+  function render(){
+    const list = body.querySelector('#flowList');
+    list.innerHTML='';
+    AUTO.flows.forEach(f=>{
+      const el = document.createElement('div');
+      el.className='flow-card';
+      el.innerHTML = `
+        <div class="flow-step"><div class="lbl">When</div><div>${f.trigger}</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="lbl">Then</div><div>${f.action}</div></div>
+        <div class="flow-toggle ${f.on?'on':''}"></div>
+      `;
+      el.querySelector('.flow-toggle').onclick = ()=>{
+        f.on = !f.on; saveState(); render();
+        toast(`Automation "${f.trigger}" turned ${f.on?'ON':'OFF'}`);
+      };
+      list.appendChild(el);
+    });
+  }
+  body.querySelector('#addFlow').onclick = ()=>{
+    const tId = body.querySelector('#newTrigger').value;
+    const aId = body.querySelector('#newAction').value;
+    const t = AUTOMATION_TRIGGER_TYPES.find(x=>x.id===tId);
+    const a = AUTOMATION_ACTION_TYPES.find(x=>x.id===aId);
+    AUTO.flows.push({id:'a'+Date.now(), triggerType:t.id, trigger:t.label, actionType:a.id, action:a.label, on:true});
+    STATS.automationsCreated++; awardXP(8,'Automation created');
+    logActivity('automation', `Created automation: ${t.label} → ${a.label}`, 'automations');
+    saveState(); render();
+  };
+  render();
+  WM.create({id:'automations', title:'Automation Engine', icon:'⚡', width:620, height:480, body});
+};
