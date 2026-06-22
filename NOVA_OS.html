@@ -1838,3 +1838,267 @@ function openApp(id){
     case 'home': Apps.home(); break;
   }
 }
+/* =========================================================
+   ORBITAL LAUNCHER
+   ========================================================= */
+function buildOrbitalDock(){
+  const wrap = document.getElementById('orbit-items');
+  wrap.innerHTML='';
+  const outerApps = APP_REGISTRY.filter(a=>a.ring==='outer');
+  const innerApps = APP_REGISTRY.filter(a=>a.ring==='inner');
+
+  function placeRing(apps, radiusX, radiusY, sizeClass){
+    const total = apps.length;
+    apps.forEach((app,i)=>{
+      const angle = Math.PI + (i/(total-1))*Math.PI; // PI..2PI
+      const x = Math.cos(angle)*radiusX;
+      const y = Math.sin(angle)*radiusY;
+      const el = document.createElement('div');
+      el.className = 'orbit-item' + (sizeClass?' '+sizeClass:'');
+      const half = sizeClass==='small' ? 22 : 29;
+      el.style.left = `calc(50% + ${x}px - ${half}px)`;
+      el.style.top = `calc(340px + ${y}px - ${half}px)`;
+      el.innerHTML = `${app.icon}<div class="label">${app.name}</div>`;
+      el.onclick = ()=> openApp(app.id);
+      wrap.appendChild(el);
+      const driftDur = 6+Math.random()*4;
+      el.style.animation = `orbitBob ${driftDur}s ease-in-out infinite`;
+      el.style.animationDelay = (i*0.3)+'s';
+    });
+  }
+  placeRing(outerApps, 380, 330, '');
+  placeRing(innerApps, 230, 195, 'small');
+}
+// inject keyframes for bob
+const styleTag = document.createElement('style');
+styleTag.textContent = `@keyframes orbitBob{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}`;
+document.head.appendChild(styleTag);
+
+document.getElementById('core-launcher').onclick = ()=> openApp('assistant');
+document.getElementById('undoChip').onclick = undo;
+document.getElementById('redoChip').onclick = redo;
+document.getElementById('undoChip').classList.add('disabled');
+document.getElementById('redoChip').classList.add('disabled');
+
+
+/* ---------- PREDICTIVE LAUNCHER ---------- */
+function predictNextApps(){
+  const entries = Object.entries(STATS.appsOpened);
+  if(entries.length===0) return [];
+  const total = entries.reduce((s,[,c])=>s+c, 0);
+  return entries
+    .map(([id,count])=>({id, count, pct: Math.round((count/total)*100)}))
+    .sort((a,b)=>b.count-a.count)
+    .slice(0,3);
+}
+function renderPredictiveLauncher(){
+  const pop = document.getElementById('predictive-launcher');
+  const preds = predictNextApps();
+  if(preds.length===0){
+    pop.innerHTML = `<h5>Predicted Next</h5><div class="muted" style="font-size:12px;">Open a few apps and Nexus will start predicting what you'll need.</div>`;
+    return;
+  }
+  pop.innerHTML = `<h5>Predicted Next</h5>` + preds.map(p=>{
+    const app = APP_REGISTRY.find(a=>a.id===p.id);
+    if(!app) return '';
+    return `<div class="pred-item" data-id="${app.id}"><span>${app.icon} ${app.name}</span><span class="pct">${p.pct}%</span></div>`;
+  }).join('');
+  pop.querySelectorAll('.pred-item').forEach(el=>{
+    el.onclick = ()=>{ openApp(el.dataset.id); pop.classList.remove('show'); };
+  });
+}
+let predHoverTimer;
+document.getElementById('core-launcher').addEventListener('mouseenter', ()=>{
+  predHoverTimer = setTimeout(()=>{
+    renderPredictiveLauncher();
+    document.getElementById('predictive-launcher').classList.add('show');
+  }, 350);
+});
+document.getElementById('core-launcher').addEventListener('mouseleave', ()=>{
+  clearTimeout(predHoverTimer);
+  document.getElementById('predictive-launcher').classList.remove('show');
+});
+document.getElementById('predictive-launcher').addEventListener('mouseenter', ()=>{
+  document.getElementById('predictive-launcher').classList.add('show');
+});
+document.getElementById('predictive-launcher').addEventListener('mouseleave', ()=>{
+  document.getElementById('predictive-launcher').classList.remove('show');
+});
+
+
+/* =========================================================
+   FILE EXPLORER
+   ========================================================= */
+function iconForExt(ext){
+  switch(ext){
+    case 'txt': return '📄';
+    case 'js': case 'ts': return '📜';
+    case 'json': return '🗂️';
+    case 'md': return '📘';
+    case 'png': case 'jpg': case 'jpeg': return '🖼️';
+    default: return '📄';
+  }
+}
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const Apps = {};
+
+Apps.explorer = function(initPath=[]){
+  const body = document.createElement('div');
+  body.className = 'fe-wrap';
+  body.innerHTML = `
+    <div class="fe-sidebar" id="feSidebar"></div>
+    <div class="fe-main">
+      <div class="fe-toolbar">
+        <button class="btn" id="feBack">← Back</button>
+        <button class="btn" id="feNewFolder">+ Folder</button>
+        <button class="btn" id="feNewFile">+ File</button>
+        <span class="fe-path" id="fePath"></span>
+      </div>
+      <div class="fe-grid" id="feGrid"></div>
+    </div>
+  `;
+  const state = {path: initPath};
+
+  function render(){
+    const sidebar = body.querySelector('#feSidebar');
+    sidebar.innerHTML = `<div class="sb-item ${state.path.length===0?'active':''}" data-p="">🏠 Home</div>`;
+    const walk = (node, path)=>{
+      node.children.filter(c=>c.type==='folder').forEach(f=>{
+        const p = [...path, f.name];
+        const isActive = JSON.stringify(p)===JSON.stringify(state.path);
+        const item = document.createElement('div');
+        item.className = 'sb-item' + (isActive?' active':'');
+        item.style.paddingLeft = (12 + path.length*14)+'px';
+        item.textContent = '📁 '+f.name;
+        item.onclick = ()=>{ state.path=p; render(); };
+        makeDropTarget(item, p);
+        sidebar.appendChild(item);
+        walk(f, p);
+      });
+    };
+    sidebar.querySelector('.sb-item').onclick = ()=>{ state.path=[]; render(); };
+    makeDropTarget(sidebar.querySelector('.sb-item'), []);
+    walk(FS.tree, []);
+
+    body.querySelector('#fePath').textContent = '/ ' + state.path.join(' / ');
+
+    const folder = FS.getFolder(state.path);
+    const grid = body.querySelector('#feGrid');
+    grid.innerHTML='';
+    if(!folder){ state.path=[]; return render(); }
+    folder.children.slice().sort((a,b)=> (a.type===b.type)? a.name.localeCompare(b.name) : (a.type==='folder'?-1:1)).forEach(item=>{
+      const el = document.createElement('div');
+      el.className = 'fe-item';
+      const icon = item.type==='folder' ? '📁' : iconForExt(item.ext);
+      const favKeyDisplay = [...state.path, item.name].join('/');
+      const starMark = isFavorite(item.type, favKeyDisplay) ? '<span class="fav-star">★</span>' : '';
+      const tagChips = (item.tags||[]).map(t=>tagChipHtml(t)).join('');
+      el.innerHTML = `${starMark}<div class="fi-ic">${icon}</div><span>${item.name}</span><div class="tag-row sm" style="justify-content:center;">${tagChips}</div>`;
+      el.ondblclick = ()=>{
+        if(item.type==='folder'){ state.path=[...state.path, item.name]; render(); }
+        else openFileInEditor(state.path, item);
+      };
+      el.oncontextmenu = (e)=>{
+        e.preventDefault();
+        const favKey = [...state.path, item.name].join('/');
+        showCtxMenu(e.pageX, e.pageY, [
+          {label:'Open', action:()=> item.type==='folder' ? (state.path=[...state.path,item.name], render()) : openFileInEditor(state.path,item)},
+          {label: isFavorite(item.type, favKey) ? '★ Unfavorite' : '☆ Favorite', action:()=>{
+            toggleFavorite(item.type, favKey, item.name);
+            render();
+          }},
+          {label:'Add tag', action:()=>{
+            const t = prompt('Add a tag (e.g. school, coding, ideas)');
+            if(t){
+              const norm = registerTag(t);
+              item.tags = item.tags || [];
+              if(!item.tags.includes(norm)) item.tags.push(norm);
+              saveState(); render();
+            }
+          }},
+          {label:'Rename', action:()=>{
+            const nn = prompt('New name', item.name);
+            if(nn){ FS.renameItem(state.path, item.name, nn); render(); }
+          }},
+          {label:'Delete', action:()=>{ FS.deleteItem(state.path, item.name); render(); }},
+        ]);
+      };
+      // drag source
+      el.draggable = true;
+      el.addEventListener('dragstart', (e)=>{
+        e.dataTransfer.setData('text/nexus-item', JSON.stringify({from: state.path, name: item.name}));
+        e.dataTransfer.effectAllowed = 'move';
+        el.style.opacity='0.4';
+      });
+      el.addEventListener('dragend', ()=>{ el.style.opacity='1'; });
+      // drop target only if folder
+      if(item.type==='folder'){
+        makeDropTarget(el, [...state.path, item.name]);
+      }
+      grid.appendChild(el);
+    });
+  }
+
+  // shared drop target logic — highlights and handles moveItem
+  function makeDropTarget(el, targetPath){
+    el.addEventListener('dragover', (e)=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect='move';
+      el.style.outline = '2px dashed var(--accent)';
+      el.style.background = 'rgba(53,133,142,0.08)';
+    });
+    el.addEventListener('dragleave', ()=>{
+      el.style.outline=''; el.style.background='';
+    });
+    el.addEventListener('drop', (e)=>{
+      e.preventDefault();
+      el.style.outline=''; el.style.background='';
+      const raw = e.dataTransfer.getData('text/nexus-item');
+      if(!raw) return;
+      const {from, name} = JSON.parse(raw);
+      if(JSON.stringify(from)===JSON.stringify(targetPath)){ return; } // dropped on same folder
+      if(FS.moveItem(from, name, targetPath)){
+        toast(`Moved "${name}" to ${targetPath.length?targetPath.join('/'):'Home'}`);
+        logActivity('file', `Moved "${name}" to ${targetPath.length?'/'+targetPath.join('/'):'Home'}`);
+        render();
+      } else {
+        toast(`Couldn't move "${name}" there`);
+      }
+    });
+  }
+
+  body.querySelector('#feBack').onclick = ()=>{ if(state.path.length){ state.path.pop(); render(); } };
+  body.querySelector('#feNewFolder').onclick = ()=>{
+    const n = prompt('Folder name'); if(n){ FS.createFolder(state.path, n); render(); }
+  };
+  body.querySelector('#feNewFile').onclick = ()=>{
+    const n = prompt('File name (e.g. notes.txt)'); if(n){
+      const ext = n.includes('.') ? n.split('.').pop() : 'txt';
+      FS.createFile(state.path, n, '', ext); render();
+    }
+  };
+
+  render();
+  WM.create({id:'explorer', title:'File Explorer', icon:'📁', width:680, height:460, body});
+};
+
+function openFileInEditor(path, item){
+  if(item.ext==='js' || item.ext==='ts' || item.ext==='json'){
+    Apps.code(path, item);
+  } else {
+    const body = document.createElement('div');
+    body.className = 'app-pad';
+    body.style.height='100%';
+    body.innerHTML = `<textarea style="width:100%; height:100%; min-height:300px;">${escapeHtml(item.content||'')}</textarea>`;
+    const ta = body.querySelector('textarea');
+    let editTimer = null;
+    ta.addEventListener('input', ()=>{
+      const firstInBurst = !editTimer;
+      if(editTimer) clearTimeout(editTimer);
+      editTimer = setTimeout(()=>{ editTimer=null; }, 1500);
+      FS.updateFile(path, item.name, ta.value, !firstInBurst);
+    });
+    WM.create({id:'file-'+item.name+Math.random(), title:item.name, icon:iconForExt(item.ext), width:500, height:420, body});
+  }
+}
