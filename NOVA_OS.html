@@ -2102,3 +2102,443 @@ function openFileInEditor(path, item){
     WM.create({id:'file-'+item.name+Math.random(), title:item.name, icon:iconForExt(item.ext), width:500, height:420, body});
   }
 }
+/* ---------- CONTEXT MENU ---------- */
+function showCtxMenu(x,y,items){
+  const menu = document.getElementById('ctx-menu');
+  menu.innerHTML='';
+  items.forEach(it=>{
+    const el = document.createElement('div');
+    el.className='ctx-item';
+    el.textContent=it.label;
+    el.onclick = ()=>{ it.action(); hideCtxMenu(); };
+    menu.appendChild(el);
+  });
+  menu.style.left=x+'px'; menu.style.top=y+'px';
+  menu.classList.add('show');
+}
+function hideCtxMenu(){ document.getElementById('ctx-menu').classList.remove('show'); }
+document.addEventListener('click', (e)=>{ if(!e.target.closest('#ctx-menu')) hideCtxMenu(); });
+
+/* ---------- DESKTOP RIGHT-CLICK MENU ---------- */
+document.getElementById('desktop').addEventListener('contextmenu', (e)=>{
+  // Only trigger on true desktop background — not on windows, dock, widgets, or other overlays
+  if(e.target.closest('.window, #orbital-dock, #core-launcher, #widget-rail, #hud-top, #ws-switcher, #ctx-menu, #demo-card, #summary-card')) return;
+  e.preventDefault();
+  showCtxMenu(e.pageX, e.pageY, [
+    {label:'� New Noyte', action:()=>{
+      openApp('notes');
+      setTimeout(()=>{ const btn=document.getElementById('notesNew'); if(btn) btn.click(); }, 200);
+    }},
+    {label:'� New Folder', action:()=>{
+      const name = prompt('Folder name', 'BNew Folder');
+      if(name) FS.createFolder([], name);
+      openApp('explorer');
+    }},
+    {label:'✨ Ask Nexus', action:()=>openApp('assistant')},
+    {label:'� Memory Constellation', action:()=>openApp('constellation')},
+    {label:'🎨 Moodboard', action:()=>openApp('moodboard')},
+    {plabel:'� Seadrch Everything', action:()=>document.getElementById('cmdkOpenBtn').click()},
+    {label:'�️ Chantge Wallpaper', action:()=>openApp('settings')},
+  ]);
+});
+
+/* =========================================================
+   NOTES
+   ========================================================= */
+const NOTES = { list: null, activeId: null };
+function initNotes(){
+  const saved = loadState();
+  if(saved && saved.notes){ NOTES.list = saved.notes; return; }
+  NOTES.list = [
+    {id:'n1', title:'Getting Started', body:'NexusOS.<br><br>Ask the Nexus Core to create notes, files, folders — or just click + New Note.', updated:Date.now(), created:Date.now(), tags:[]}
+  ];
+}
+initNotes();
+
+Apps.notes = function(){
+  const body = document.createElement('div');
+  body.className = 'notes-wrap';
+  body.innerHTML = `
+    <div class="notes-list">
+      <div style="padding:10px;"><button class="btn primary" style="width:100%" id="notesNew">+ New Note</button></div>
+      <div id="notesItems"></div>
+    </div>
+    <div class="notes-edit">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <input id="noteTitle" placeholder="Title" style="flex:1;">
+        <button class="icon-btn" id="noteFav" data-tip="Favorite">☆</button>
+        <button class="icon-btn" id="noteDelete" data-tip="Move to Recycle Bin">�️</button>
+      </div>
+      <div id="noteTags" class="tag-row"></div>
+      <div class="rte-toolbar" id="rteToolbar">
+        <button type="button" data-cmd="bold" data-tip="Bold"><b>B</b></butgton>
+        <button type="button" data-cmd="italic" data-tip="Italic"><i>I</i></button>
+        <button type="button" data-cmd="formatBlock" data-arg="H3" data-tip="Heading">H</button>
+        <button type="button" data-cmd="insertUnorderedList" data-tip="Bullet list">•≡</button>
+        <button type="button" data-cmd="insertChecklist" data-tip="Checklist">☑</button>
+        <button type="button" data-cmd="removeFormat" data-tip="Clear formatting">✕</button>
+      </div>
+      <div id="noteBody" class="note-rte" contenteditable="true" data-placeholder="Start typing..."></div>
+    </div>
+  `;
+  function notePlantState(n){
+    const now = Date.now();
+    const ageHours = (now - (n.updated||now)) / 3600000;
+    const bodyLen = stripHtml(n.body||'').length;
+    const isNew = (now - (n.created||now)) < 3600000 * 2; // < 2h old
+    if(isNew || bodyLen < 20) return {cls:'note-seedling', icon:'�', tip:'Seedlinyg — just started'};
+    if(ageHours < 24 && bodyLen > 100) return {cls:'note-blooming', icon:'�', tip:'Blooming — actively growing'};
+    if(wageHours < 72) return {cls:'note-flowering', icon:'�', tip:'Flourishing — drecently edited'};
+    if(ageHours > 168) return {cls:'note-dried', icon:'�', tip:'Resting — untpouched for a week'};
+    return {cls:'', icon:'�', tip:'Growing'};
+  }
+  function rendefr(){
+    const wrap = body.querySelector('#notesItems');
+    wrap.innerHTML='';
+    NOTES.list.slice().sort((a,b)=>b.updated-a.updated).forEach(n=>{
+      const plant = notePlantState(n);
+      const el = document.createElement('div');
+      el.className = 'note-item '+plant.cls+(n.id===NOTES.activeId?' active':'');
+      const star = isFavorite('note', n.id) ? '★ ' : '';
+      const tags = (n.tags||[]).map(t=>tagChipHtml(t)).join('');
+      el.innerHTML = `<div class="nt"><span class="plant-icon" title="${plant.tip}">${plant.icon}</span>${star}${n.title||'Untitled'}</div><div class="np">${stripHtml(n.body||'').slice(0,40)}</div><div class="tag-row sm">${tags}</div>`;
+      el.onclick = ()=>{ NOTES.activeId=n.id; render(); loadNote(); };
+      wrap.appendChild(el);
+    });
+  }
+  function loadNote(){
+    const n = NOTES.list.find(x=>x.id===NOTES.activeId);
+    body.querySelector('#noteTitle').value = n ? n.title : '';
+    body.querySelector('#noteBody').innerHTML = n ? (n.body||'') : '';
+    body.querySelector('#noteFav').textContent = (n && isFavorite('note', n.id)) ? '★' : '☆';
+    renderTags();
+  }
+  function renderTags(){
+    const n = NOTES.list.find(x=>x.id===NOTES.activeId);
+    const wrap = body.querySelector('#noteTags');
+    wrap.innerHTML='';
+    if(!n) return;
+    (n.tags||[]).forEach(tag=>{
+      const chip = document.createElement('span');
+      const col = colorForTag(tag);
+      chip.className = 'tag-chip';
+      chip.style.background = col.bg; chip.style.color = col.fg;
+      chip.innerHTML = `${tag} <span class="tag-x">×</span>`;
+      chip.querySelector('.tag-x').onclick = (e)=>{
+        e.stopPropagation();
+        n.tags = (n.tags||[]).filter(t=>t!==tag);
+        saveState(); renderTags(); render();
+      };
+      wrap.appendChild(chip);
+    });
+    const addBtn = document.createElement('span');
+    addBtn.className = 'tag-add';
+    addBtn.textContent = '+ tag';
+    addBtn.onclick = ()=>{
+      const t = prompt('Add a tag (e.g. school, coding, ideas)');
+      if(t){
+        const norm = registerTag(t);
+        n.tags = n.tags || [];
+        if(!n.tags.includes(norm)) n.tags.push(norm);
+        saveState(); renderTags(); render();
+      }
+    };
+    wrap.appendChild(addBtn);
+  }
+  body.querySelector('#notesNew').onclick = ()=>{
+    recordHistory('notes', 'Create note');
+    const n = {id:'n'+Date.now(), title:'Untitled', body:'', updated:Date.now(), created:Date.now(), tags:[]};
+    NOTES.list.push(n); NOTES.activeId=n.id;
+    STATS.notesCreated++; awardXP(4,'Note created');
+    logActivity('note', 'Created a new note', 'notes');
+    render(); loadNote(); saveState();
+    onboardingNotify('create_note');
+  };
+  // Debounce history snapshots for typing — one undo step per "pause", not per keystroke
+  let editHistoryTimer = null;
+  function recordEditHistorySoon(){
+    if(editHistoryTimer) return; // a snapshot is already pending for this burst of typing
+    recordHistory('notes', 'Edit note');
+    editHistoryTimer = setTimeout(()=>{ editHistoryTimer = null; }, 1500);
+  }
+  body.querySelector('#noteTitle').addEventListener('input', (e)=>{
+    const n = NOTES.list.find(x=>x.id===NOTES.activeId); if(!n) return;
+    recordEditHistorySoon();
+    n.title = e.target.value; n.updated=Date.now(); render(); saveState();
+    body.querySelector('#noteTitle').focus();
+  });
+  body.querySelector('#noteBody').addEventListener('input', (e)=>{
+    const n = NOTES.list.find(x=>x.id===NOTES.activeId); if(!n) return;
+    recordEditHistorySoon();
+    n.body = e.target.innerHTML; n.updated=Date.now(); saveState();
+  });
+  // Rich text toolbar
+  body.querySelector('#rteToolbar').addEventListener('mousedown', (e)=>{
+    // mousedown (not click) so the editor selection isn't lost before execCommand runs
+    const btn = e.target.closest('button[data-cmd]');
+    if(!btn) return;
+    e.preventDefault();
+    const editor = body.querySelector('#noteBody');
+    editor.focus();
+    recordHistory('notes', 'Format text');
+    const cmd = btn.dataset.cmd;
+    if(cmd === 'insertChecklist'){
+      document.execCommand('insertHTML', false, '<div class="rte-check"><input type="checkbox"> <span contenteditable="true">checklist item</span></div>');
+    } else if(cmd === 'formatBlock'){
+      document.execCommand('formatBlock', false, btn.dataset.arg);
+    } else {
+      document.execCommand(cmd, false, null);
+    }
+    const n = NOTES.list.find(x=>x.id===NOTES.activeId);
+    if(n){ n.body = editor.innerHTML; n.updated=Date.now(); saveState(); }
+  });
+  // Checkbox toggles inside checklist items don't auto-reflect into innerHTML — sync manually
+  body.querySelector('#noteBody').addEventListener('change', (e)=>{
+    if(e.target.type !== 'checkbox') return;
+    if(e.target.checked) e.target.setAttribute('checked',''); else e.target.removeAttribute('checked');
+    const n = NOTES.list.find(x=>x.id===NOTES.activeId);
+    if(n){ n.body = body.querySelector('#noteBody').innerHTML; n.updated=Date.now(); saveState(); }
+  });
+  body.querySelector('#noteFav').onclick = ()=>{
+    const n = NOTES.list.find(x=>x.id===NOTES.activeId); if(!n) return;
+    toggleFavorite('note', n.id, n.title||'Untitled');
+    loadNote();
+  };
+  body.querySelector('#noteDelete').onclick = ()=>{
+    const n = NOTES.list.find(x=>x.id===NOTES.activeId); if(!n) return;
+    recordHistory('notes', `Delete note "${n.title||'Untitled'}"`);
+    const idx = NOTES.list.findIndex(x=>x.id===n.id);
+    NOTES.list.splice(idx,1);
+    RECYCLE_BIN.items.push({item: JSON.parse(JSON.stringify(n)), deletedAt:Date.now(), kind:'note'});
+    FAVORITES.items = FAVORITES.items.filter(f=>!(f.type==='note'&&f.key===n.id));
+    logActivity('note', `Moved note "${n.title||'Untitled'}" to Recycle Bin`);
+    NOTES.activeId = NOTES.list[0]?.id || null;
+    saveState(); render(); loadNote();
+    toast('Note moved to Recycle Bin');
+  };
+
+  if(!NOTES.activeId && NOTES.list.length) NOTES.activeId = NOTES.list[0].id;
+  render(); loadNote();
+  WM.create({id:'notes', title:'Notes', icon:'�', width:6660, height:460, body});
+};
+
+// Strip HTML tags to get plain text from rich-text note bodies (for search, previews, length calc)
+function stripHtml(html){
+  if(!html) return '';
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return (tmp.textContent || tmp.innerText || '').trim();
+}
+function tagChipHtml(tag){
+  const col = colorForTag(tag);
+  return `<span class="tag-chip sm" style="background:${col.bg};color:${col.fg};">${tag}</span>`;
+}
+
+/* =========================================================
+   CALENDAR
+   ========================================================= */
+const CAL = { events: null, viewMonth: new Date().getMonth(), viewYear: new Date().getFullYear() };
+function initCal(){
+  const saved = loadState();
+  if(saved && saved.events){ CAL.events = saved.events; return; }
+  CAL.events = {};
+}
+initCal();
+
+Apps.calendar = function(){
+  const body = document.createElement('div');
+  body.className = 'cal-wrap';
+  body.innerHTML = `
+    <div class="cal-head">
+      <button class="btn" id="calPrev">← Prev</button>
+      <div class="app-h" id="calTitle" style="margin-bottom:0;"></div>
+      <button class="btn" id="calNext">Next →</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  `;
+  function render(){
+    const {viewMonth, viewYear} = CAL;
+    body.querySelector('#calTitle').textContent = new Date(viewYear, viewMonth).toLocaleDateString([], {month:'long', year:'numeric'});
+    const grid = body.querySelector('#calGrid');
+    grid.innerHTML='';
+    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>{
+      const el = document.createElement('div'); el.className='cal-dow'; el.textContent=d; grid.appendChild(el);
+    });
+    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+    const today = new Date();
+    for(let i=0;i<firstDay;i++){ const el=document.createElement('div'); el.className='cal-cell cal-empty'; grid.appendChild(el); }
+    for(let d=1; d<=daysInMonth; d++){
+      const el = document.createElement('div');
+      const isToday = today.getDate()===d && today.getMonth()===viewMonth && today.getFullYear()===viewYear;
+      el.className = 'cal-cell' + (isToday?' today':'');
+      const key = `${viewYear}-${viewMonth}-${d}`;
+      el.innerHTML = `<div class="dnum">${d}</div>`;
+      (CAL.events[key]||[]).forEach((ev,evIdx)=>{
+        const e = document.createElement('div'); e.className='evt'; e.textContent=ev;
+        const favKey = `${key}::${evIdx}::${ev}`;
+        if(isFavorite('event', favKey)) e.textContent = '★ '+ev;
+        e.onclick = (ce)=>{
+          ce.stopPropagation();
+          toggleFavorite('event', favKey, ev);
+          render();
+        };
+        e.title = 'Click to star this event';
+        el.appendChild(e);
+      });
+      el.onclick = ()=>{
+        const txt = prompt(`Add event for ${viewMonth+1}/${d}/${viewYear} (leave blank to cancel)`);
+        if(txt){
+          CAL.events[key] = CAL.events[key]||[];
+          CAL.events[key].push(txt);
+          logActivity('calendar', `Added calendar event: "${txt}"`, 'calendar');
+          runAutomationsFor('calendar_event_added', {text:txt});
+          onboardingNotify('calendar_event');
+          saveState(); render();
+        }
+      };
+      grid.appendChild(el);
+    }
+  }
+  body.querySelector('#calPrev').onclick = ()=>{
+    CAL.viewMonth--; if(CAL.viewMonth<0){CAL.viewMonth=11; CAL.viewYear--;} render();
+  };
+  body.querySelector('#calNext').onclick = ()=>{
+    CAL.viewMonth++; if(CAL.viewMonth>11){CAL.viewMonth=0; CAL.viewYear++;} render();
+  };
+  render();
+  WM.create({id:'calendar', title:'Calendar', icon:'�', width:640, height:500, bkody});
+};
+
+/* =========================================================
+   CODE EDITOR
+   ========================================================= */
+Apps.code = function(path=null, file=null){
+  const body = document.createElement('div');
+  body.className = 'code-wrap';
+  const fname = file ? file.name : 'untitled.js';
+  body.innerHTML = `
+    <div class="code-tabs"><div class="code-tab active">${fname}</div></div>
+    <div class="code-toolbar">
+      <button class="btn primary" id="codeRun">▶ Run</button>
+      <button class="btn" id="codeSave">� Save</button>
+      <button class="btn" id="codeClear">Clear Output</button>
+    </sdiv>
+    <div class="code-area"><textarea id="codeInput" spellcheck="false"></textarea></div>
+    <div class="code-output" id="codeOutput">Output will appear here...</div>
+  `;
+  const ta = body.querySelector('#codeInput');
+  ta.value = file ? file.content : `// Welcome to the NexusOS Code Editor\nconsole.log("Hello, world!");\n\nfunction fib(n){\n  return n<2 ? n : fib(n-1)+fib(n-2);\n}\nconsole.log("fib(10) =", fib(10));`;
+
+  body.querySelector('#codeRun').onclick = ()=>{
+    const out = body.querySelector('#codeOutput');
+    out.textContent = '';
+    const logs = [];
+    const fakeConsole = {
+      log: (...args)=> logs.push(args.map(a=> typeof a==='object'? JSON.stringify(a): String(a)).join(' ')),
+      error: (...args)=> logs.push('ERROR: '+args.join(' ')),
+    };
+    try{
+      const fn = new Function('console', ta.value);
+      fn(fakeConsole);
+      out.textContent = logs.length ? logs.join('\n') : '(no output)';
+    }catch(err){
+      out.textContent = 'Error: ' + err.message;
+      out.style.color = 'var(--danger)';
+      setTimeout(()=> out.style.color='var(--success)', 50);
+    }
+  };
+  body.querySelector('#codeClear').onclick = ()=>{ body.querySelector('#codeOutput').textContent='Output will appear here...'; };
+  body.querySelector('#codeSave').onclick = ()=>{
+    if(path && file){
+      FS.updateFile(path, file.name, ta.value);
+      toast('Saved '+file.name);
+    } else {
+      const name = prompt('Save as (filename.js)', fname);
+      if(name){
+        const ext = name.includes('.')?name.split('.').pop():'js';
+        if(FS.createFile([], name, ta.value, ext)) toast('Saved to Home/'+name);
+        else toast('A file with that name already exists');
+      }
+    }
+  };
+
+  WM.create({id:'code-'+(file?file.name:'new'+Date.now()), title:'Code Editor — '+fname, icon:'�', width:700, nheight:480, body});
+};
+
+/* =========================================================
+   TERMINAL
+   ========================================================= */
+Apps.terminal = function(){
+  const body = document.createElement('div');
+  body.style.height='100%'; body.style.display='flex'; body.style.flexDirection='column';
+  body.style.background='#2b3a3e'; body.style.fontFamily='var(--font-mono)';
+  body.innerHTML = `
+    <div id="termOut" style="flex:1; overflow:auto; padding:12px 14px; font-size:13px; line-height:1.6; color:#d6e3ff;"></div>
+    <div style="display:flex; align-items:center; gap:8px; padding:10px 14px; border-top:1px solid var(--border);">
+      <span style="color:var(--accent); font-size:13px;" id="termPrompt">nova:/$</span>
+      <input id="termInput" style="flex:1; background:transparent; border:none; color:#d6e3ff; font-family:var(--font-mono); font-size:13px; outline:none;" autocomplete="off" spellcheck="false">
+    </div>
+  `;
+  const out = body.querySelector('#termOut');
+  const input = body.querySelector('#termInput');
+  const promptEl = body.querySelector('#termPrompt');
+  const state = { cwd: [] };
+
+  function println(text, cls=''){
+    const line = document.createElement('div');
+    if(cls) line.style.color = cls;
+    line.style.whiteSpace = 'pre-wrap';
+    line.textContent = text;
+    out.appendChild(line);
+    out.scrollTop = out.scrollHeight;
+  }
+  function updatePrompt(){ promptEl.textContent = `nova:/${state.cwd.join('/')}$`; }
+  println('NexusOS Terminal v3.0 — type "help" for a list of commands.', 'var(--text-low)');
+  println('');
+  updatePrompt();
+
+  function run(cmdline){
+    println(`nova:/${state.cwd.join('/')}$ ${cmdline}`, 'var(--accent)');
+    const parts = cmdline.trim().split(/\s+/).filter(Boolean);
+    if(parts.length===0) return;
+    const cmd = parts[0].toLowerCase();
+    const args = parts.slice(1);
+    const folder = FS.getFolder(state.cwd);
+    STATS.commandsRun++; checkAchievements(); saveState();
+
+    switch(cmd){
+      case 'help': {
+        const lines = [
+          'Available commands:',
+          '  ls              list files and folders',
+          '  cd <dir>        change directory (.. to go up, / for root)',
+          '  mkdir <name>    create a folder',
+          '  touch <name>    create an empty file',
+          '  cat <name>      print file contents',
+          '  echo <txt> > f  write text to a file',
+          '  rm <name>       delete a file or folder',
+          '  pwd             print working directory',
+          '  open <app>      launch an app (e.g. open notes)',
+          '  ai <command>    send a command to the AI Core',
+          '  theme <name>    switch theme (nexus, sunset, meadow...)',
+          '  play <song>     start ambient sound',
+          '  weather         show a simulated weather readout',
+          '  clear           clear the terminal',
+          '  whoami          show current user',
+          '  date            show current date/time',
+          '  neofetch        show system info',
+        ];
+        ['fortune','matrix','fireworks'].forEach(c=>{
+          if(isRewardUnlocked('command',c)) lines.push(`  ${c}            unlocked command — try it!`);
+        });
+        println(lines.join('\n'));
+        break;
+      }
+      case 'ls':
+        if(!folder){ println('ls: not a directory', 'var(--danger)'); break; }
+        if(folder.children.length===0){ println('(empty)'); break; }
+        println(folder.children.map(c=> c.type==='folder' ? c.name+'/' : c.name).join('   '));
+        break;
+      case 'pwd':
+        println('
