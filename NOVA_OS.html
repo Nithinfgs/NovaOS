@@ -1838,6 +1838,7 @@ function openApp(id){
     case 'home': Apps.home(); break;
   }
 }
+
 /* =========================================================
    ORBITAL LAUNCHER
    ========================================================= */
@@ -2102,6 +2103,7 @@ function openFileInEditor(path, item){
     WM.create({id:'file-'+item.name+Math.random(), title:item.name, icon:iconForExt(item.ext), width:500, height:420, body});
   }
 }
+
 /* ---------- CONTEXT MENU ---------- */
 function showCtxMenu(x,y,items){
   const menu = document.getElementById('ctx-menu');
@@ -2125,20 +2127,20 @@ document.getElementById('desktop').addEventListener('contextmenu', (e)=>{
   if(e.target.closest('.window, #orbital-dock, #core-launcher, #widget-rail, #hud-top, #ws-switcher, #ctx-menu, #demo-card, #summary-card')) return;
   e.preventDefault();
   showCtxMenu(e.pageX, e.pageY, [
-    {label:'� New Noyte', action:()=>{
+    {label:'📝 New Note', action:()=>{
       openApp('notes');
       setTimeout(()=>{ const btn=document.getElementById('notesNew'); if(btn) btn.click(); }, 200);
     }},
-    {label:'� New Folder', action:()=>{
-      const name = prompt('Folder name', 'BNew Folder');
+    {label:'📂 New Folder', action:()=>{
+      const name = prompt('Folder name', 'New Folder');
       if(name) FS.createFolder([], name);
       openApp('explorer');
     }},
     {label:'✨ Ask Nexus', action:()=>openApp('assistant')},
-    {label:'� Memory Constellation', action:()=>openApp('constellation')},
+    {label:'🌌 Memory Constellation', action:()=>openApp('constellation')},
     {label:'🎨 Moodboard', action:()=>openApp('moodboard')},
-    {plabel:'� Seadrch Everything', action:()=>document.getElementById('cmdkOpenBtn').click()},
-    {label:'�️ Chantge Wallpaper', action:()=>openApp('settings')},
+    {label:'🔎 Search Everything', action:()=>document.getElementById('cmdkOpenBtn').click()},
+    {label:'🖼️ Change Wallpaper', action:()=>openApp('settings')},
   ]);
 });
 
@@ -2167,11 +2169,11 @@ Apps.notes = function(){
       <div style="display:flex; align-items:center; gap:8px;">
         <input id="noteTitle" placeholder="Title" style="flex:1;">
         <button class="icon-btn" id="noteFav" data-tip="Favorite">☆</button>
-        <button class="icon-btn" id="noteDelete" data-tip="Move to Recycle Bin">�️</button>
+        <button class="icon-btn" id="noteDelete" data-tip="Move to Recycle Bin">🗑️</button>
       </div>
       <div id="noteTags" class="tag-row"></div>
       <div class="rte-toolbar" id="rteToolbar">
-        <button type="button" data-cmd="bold" data-tip="Bold"><b>B</b></butgton>
+        <button type="button" data-cmd="bold" data-tip="Bold"><b>B</b></button>
         <button type="button" data-cmd="italic" data-tip="Italic"><i>I</i></button>
         <button type="button" data-cmd="formatBlock" data-arg="H3" data-tip="Heading">H</button>
         <button type="button" data-cmd="insertUnorderedList" data-tip="Bullet list">•≡</button>
@@ -2186,13 +2188,13 @@ Apps.notes = function(){
     const ageHours = (now - (n.updated||now)) / 3600000;
     const bodyLen = stripHtml(n.body||'').length;
     const isNew = (now - (n.created||now)) < 3600000 * 2; // < 2h old
-    if(isNew || bodyLen < 20) return {cls:'note-seedling', icon:'�', tip:'Seedlinyg — just started'};
-    if(ageHours < 24 && bodyLen > 100) return {cls:'note-blooming', icon:'�', tip:'Blooming — actively growing'};
-    if(wageHours < 72) return {cls:'note-flowering', icon:'�', tip:'Flourishing — drecently edited'};
-    if(ageHours > 168) return {cls:'note-dried', icon:'�', tip:'Resting — untpouched for a week'};
-    return {cls:'', icon:'�', tip:'Growing'};
+    if(isNew || bodyLen < 20) return {cls:'note-seedling', icon:'🌱', tip:'Seedling — just started'};
+    if(ageHours < 24 && bodyLen > 100) return {cls:'note-blooming', icon:'🌸', tip:'Blooming — actively growing'};
+    if(ageHours < 72) return {cls:'note-flowering', icon:'🌿', tip:'Flourishing — recently edited'};
+    if(ageHours > 168) return {cls:'note-dried', icon:'🍂', tip:'Resting — untouched for a week'};
+    return {cls:'', icon:'🌾', tip:'Growing'};
   }
-  function rendefr(){
+  function render(){
     const wrap = body.querySelector('#notesItems');
     wrap.innerHTML='';
     NOTES.list.slice().sort((a,b)=>b.updated-a.updated).forEach(n=>{
@@ -2319,7 +2321,7 @@ Apps.notes = function(){
 
   if(!NOTES.activeId && NOTES.list.length) NOTES.activeId = NOTES.list[0].id;
   render(); loadNote();
-  WM.create({id:'notes', title:'Notes', icon:'�', width:6660, height:460, body});
+  WM.create({id:'notes', title:'Notes', icon:'📝', width:660, height:460, body});
 };
 
 // Strip HTML tags to get plain text from rich-text note bodies (for search, previews, length calc)
@@ -2407,7 +2409,7 @@ Apps.calendar = function(){
     CAL.viewMonth++; if(CAL.viewMonth>11){CAL.viewMonth=0; CAL.viewYear++;} render();
   };
   render();
-  WM.create({id:'calendar', title:'Calendar', icon:'�', width:640, height:500, bkody});
+  WM.create({id:'calendar', title:'Calendar', icon:'📅', width:640, height:500, body});
 };
 
 /* =========================================================
@@ -2421,9 +2423,9 @@ Apps.code = function(path=null, file=null){
     <div class="code-tabs"><div class="code-tab active">${fname}</div></div>
     <div class="code-toolbar">
       <button class="btn primary" id="codeRun">▶ Run</button>
-      <button class="btn" id="codeSave">� Save</button>
+      <button class="btn" id="codeSave">💾 Save</button>
       <button class="btn" id="codeClear">Clear Output</button>
-    </sdiv>
+    </div>
     <div class="code-area"><textarea id="codeInput" spellcheck="false"></textarea></div>
     <div class="code-output" id="codeOutput">Output will appear here...</div>
   `;
@@ -2463,7 +2465,7 @@ Apps.code = function(path=null, file=null){
     }
   };
 
-  WM.create({id:'code-'+(file?file.name:'new'+Date.now()), title:'Code Editor — '+fname, icon:'�', width:700, nheight:480, body});
+  WM.create({id:'code-'+(file?file.name:'new'+Date.now()), title:'Code Editor — '+fname, icon:'💻', width:700, height:480, body});
 };
 
 /* =========================================================
@@ -2661,7 +2663,7 @@ Apps.terminal = function(){
       }
       case 'fireworks': {
         if(!isRewardUnlocked('command','fireworks')){ println('command not found: fireworks (type "help")', 'var(--danger)'); break; }
-        println('� ✨ 🎆 ✨ 🎉   Congratulations on Level '+levelFromXLP(STATS.xp)+'!   � ✨ 🎆 ✨ 🎉', 'vafr(--accent-3)');
+        println('🎉 ✨ 🎆 ✨ 🎉   Congratulations on Level '+levelFromXP(STATS.xp)+'!   🎉 ✨ 🎆 ✨ 🎉', 'var(--accent-3)');
         break;
       }
       case 'neofetch':
@@ -2725,7 +2727,7 @@ function runAutomationsFor(triggerType, payload={}){
       case 'create_reminder': {
         const n = {id:'n'+Date.now(), title:'Reminder: '+(payload.text||'Event'), body:`Don't forget: ${payload.text||''}`, updated:Date.now(), created:Date.now(), tags:[]};
         NOTES.list.push(n); saveState();
-        notify(`� Reminder niote created: "${n.title}"`, [
+        notify(`📝 Reminder note created: "${n.title}"`, [
           {label:'Open', primary:true, onClick:()=>{ NOTES.activeId=n.id; openApp('notes'); }},
         ], 'note');
         logActivity('automation', `Automation "${f.trigger}" → ${f.action}`);
@@ -3158,4 +3160,2511 @@ Apps.constellation = function(){
       }
     });
 
-    
+    // nodes with physics drift + pulse
+    nodes.forEach(nd=>{
+      // soft spring toward target position
+      const dx=(nd.tx-nd.x)*0.008, dy=(nd.ty-nd.y)*0.008;
+      nd.vx = nd.vx*0.92 + dx;
+      nd.vy = nd.vy*0.92 + dy;
+      // gentle Lissajous drift overlay
+      nd.x += nd.vx + Math.sin(t*0.4+nd.phase)*0.00025;
+      nd.y += nd.vy + Math.cos(t*0.5+nd.phase*1.3)*0.00025;
+
+      const px=nd.x*canvas.width, py=nd.y*canvas.height;
+      const isHover = hoveredNode===nd;
+      // pulse radius
+      const pulseScale = 1 + 0.12*Math.sin(t*2 + nd.phase);
+      const r = nd.size * (isHover ? 1.45 : pulseScale);
+      const col = nd.col.r;
+
+      // outer glow halo (bigger when hovered)
+      const haloR = isHover ? r*5.5 : r*3.8;
+      const grad = ctx.createRadialGradient(px,py,r*0.5,px,py,haloR);
+      grad.addColorStop(0, `rgba(${col},${isHover?0.7:0.5})`);
+      grad.addColorStop(0.4, `rgba(${col},${isHover?0.2:0.12})`);
+      grad.addColorStop(1, `rgba(${col},0)`);
+      ctx.beginPath(); ctx.arc(px,py,haloR,0,Math.PI*2);
+      ctx.fillStyle=grad; ctx.fill();
+
+      // inner sparkle ring (thin circle)
+      if(isHover){
+        ctx.beginPath(); ctx.arc(px,py,r*2.2,0,Math.PI*2);
+        ctx.strokeStyle=`rgba(${col},0.3)`; ctx.lineWidth=1; ctx.stroke();
+      }
+
+      // star body
+      ctx.beginPath(); ctx.arc(px,py,r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${col},0.95)`; ctx.fill();
+      // highlight dot
+      ctx.beginPath(); ctx.arc(px-r*0.28,py-r*0.28,r*0.28,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,0.45)`; ctx.fill();
+
+      // label
+      const labelDist = isHover ? r+10 : r+6;
+      ctx.font = isHover ? `bold 11.5px "Sora",sans-serif` : `10px "JetBrains Mono",monospace`;
+      ctx.fillStyle = isHover ? `rgba(${col},1)` : 'rgba(38,50,56,0.6)';
+      ctx.fillText(nd.label, px+labelDist, py+4);
+    });
+
+    rafId = requestAnimationFrame(draw);
+  }
+
+  resize();
+  let rafId = requestAnimationFrame(draw);
+
+  WM.create({
+    id:'constellation', title:'Memory Constellation', icon:'🌌', width:780, height:560, body,
+    onClose:()=>{ cancelAnimationFrame(rafId); },
+    resizable:true
+  });
+  setTimeout(resize, 50);
+};
+
+
+/* =========================================================
+   NEURAL ACTIVITY GRAPH
+   ========================================================= */
+Apps.neuralgraph = function(){
+  const body = document.createElement('div');
+  body.style.height='100%'; body.style.position='relative'; body.style.background='#FBFBF6'; body.style.overflow='hidden';
+  body.innerHTML = `
+    <div style="position:absolute; top:10px; left:14px; z-index:5; font-family:var(--font-display); font-size:12px; letter-spacing:2px; color:var(--text-mid);">🧠 NEURAL ACTIVITY — live system &amp; AI events</div>
+    <canvas id="neuralCanvas" style="width:100%; height:70%; display:block;"></canvas>
+    <div id="neuralFeed" style="position:absolute; bottom:0; left:0; right:0; height:30%; overflow:auto; padding:10px 14px; font-family:var(--font-mono); font-size:11.5px; border-top:1px solid var(--border); background:rgba(255,255,255,0.55); backdrop-filter:blur(8px);"></div>
+  `;
+  const canvas = body.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+  function resize(){ canvas.width=body.clientWidth; canvas.height=body.clientHeight*0.7; }
+  resize(); window.addEventListener('resize', resize);
+
+  // nodes: apps + AI core + filesystem + user
+  const centers = [
+    {label:'AI Core', x:0.5, y:0.45, color:'53,133,142', r:14},
+    {label:'User', x:0.18, y:0.2, color:'125,167,140', r:9},
+    {label:'Filesystem', x:0.82, y:0.2, color:'77,255,176', r:9},
+    {label:'Apps', x:0.5, y:0.85, color:'245,143,92', r:9},
+    {label:'Automations', x:0.85, y:0.8, color:'255,209,102', r:9},
+    {label:'System', x:0.15, y:0.8, color:'150,160,200', r:9},
+  ];
+  let pulses = [];
+  // THOUGHT TRAILS — persistent glowing connections that accumulate over the session
+  THOUGHT_TRAILS.list = THOUGHT_TRAILS.list || [];
+  function spawnPulse(fromIdx, toIdx, color){
+    pulses.push({from:centers[fromIdx], to:centers[toIdx], t:0, color});
+    // record a thought trail (cap to avoid runaway growth)
+    THOUGHT_TRAILS.list.push({fromIdx, toIdx, color, born:Date.now()});
+    if(THOUGHT_TRAILS.list.length>120) THOUGHT_TRAILS.list.shift();
+  }
+  // map activity kinds to flow
+  function flowForKind(kind){
+    switch(kind){
+      case 'ai': return [1,0]; // user -> AI core
+      case 'file': return [0,2];
+      case 'automation': return [0,4];
+      case 'achievement': return [0,3];
+      case 'plugin': return [0,3];
+      default: return [5,0];
+    }
+  }
+  function renderFeed(){
+    const feed = body.querySelector('#neuralFeed');
+    feed.innerHTML='';
+    ACTIVITY.log.slice(0,20).forEach(a=>{
+      const div = document.createElement('div');
+      div.style.marginBottom='4px';
+      div.style.color = {ai:'var(--accent-2)', file:'var(--success)', automation:'var(--warn)', achievement:'var(--accent-3)', system:'var(--text-mid)'}[a.kind] || 'var(--text-mid)';
+      div.textContent = `[${new Date(a.time).toLocaleTimeString()}] ${a.text}`;
+      feed.appendChild(div);
+    });
+  }
+  renderFeed();
+  let lastLen = ACTIVITY.log.length;
+  setInterval(()=>{
+    if(ACTIVITY.log.length !== lastLen){
+      lastLen = ACTIVITY.log.length;
+      const kind = ACTIVITY.log[0]?.kind || 'system';
+      const [f,t] = flowForKind(kind);
+      const colMap = {ai:'53,133,142', file:'125,167,140', automation:'242,192,120', achievement:'245,143,92', system:'148,163,154'};
+      spawnPulse(f,t,colMap[kind]||'150,160,200');
+      renderFeed();
+    }
+  }, 500);
+  // occasional ambient pulses
+  setInterval(()=>{
+    const f = Math.floor(Math.random()*centers.length);
+    let t = Math.floor(Math.random()*centers.length);
+    if(t===f) t=(t+1)%centers.length;
+    spawnPulse(f,t,'90,110,160');
+  }, 2200);
+
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    // base connections (all to AI core)
+    centers.forEach((c,i)=>{
+      if(i===0) return;
+      ctx.beginPath();
+      ctx.moveTo(centers[0].x*canvas.width, centers[0].y*canvas.height);
+      ctx.lineTo(c.x*canvas.width, c.y*canvas.height);
+      ctx.strokeStyle='rgba(53,133,142,0.15)';
+      ctx.lineWidth=1; ctx.stroke();
+    });
+    // thought trails — accumulated glowing curves, fade slowly over ~90s
+    const now = Date.now();
+    THOUGHT_TRAILS.list.forEach(trail=>{
+      const age = (now - trail.born)/1000;
+      const life = Math.max(0, 1 - age/90);
+      if(life<=0) return;
+      const a = centers[trail.fromIdx], b = centers[trail.toIdx];
+      const ax=a.x*canvas.width, ay=a.y*canvas.height;
+      const bx=b.x*canvas.width, by=b.y*canvas.height;
+      const offset = (trail.fromIdx+trail.toIdx)%2===0 ? -26 : 26;
+      const mx=(ax+bx)/2, my=(ay+by)/2 + offset;
+      ctx.beginPath();
+      ctx.moveTo(ax,ay);
+      ctx.quadraticCurveTo(mx,my,bx,by);
+      ctx.strokeStyle = `rgba(${trail.color},${0.08*life})`;
+      ctx.lineWidth=1.5;
+      ctx.stroke();
+    });
+    THOUGHT_TRAILS.list = THOUGHT_TRAILS.list.filter(t=> (now-t.born)/1000 < 90);
+    // pulses
+    pulses.forEach(p=>{
+      p.t += 0.02;
+      const x = p.from.x + (p.to.x-p.from.x)*p.t;
+      const y = p.from.y + (p.to.y-p.from.y)*p.t;
+      ctx.beginPath();
+      ctx.arc(x*canvas.width, y*canvas.height, 3.5, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(${p.color},${1-p.t})`;
+      ctx.fill();
+    });
+    pulses = pulses.filter(p=>p.t<1);
+    // nodes
+    centers.forEach((c,i)=>{
+      const px=c.x*canvas.width, py=c.y*canvas.height;
+      const pulseScale = i===0 ? 1+0.15*Math.sin(Date.now()/300) : 1;
+      const grad = ctx.createRadialGradient(px,py,0,px,py,c.r*4*pulseScale);
+      grad.addColorStop(0, `rgba(${c.color},0.8)`);
+      grad.addColorStop(1, `rgba(${c.color},0)`);
+      ctx.beginPath(); ctx.arc(px,py,c.r*4*pulseScale,0,Math.PI*2); ctx.fillStyle=grad; ctx.fill();
+      ctx.beginPath(); ctx.arc(px,py,c.r*pulseScale,0,Math.PI*2); ctx.fillStyle=`rgba(${c.color},1)`; ctx.fill();
+      ctx.font = '11px "Fraunces", serif';
+      ctx.fillStyle='rgba(38,50,56,0.8)';
+      ctx.textAlign='center';
+      ctx.fillText(c.label, px, py+c.r*4*pulseScale+14);
+      ctx.textAlign='left';
+    });
+    rafId = requestAnimationFrame(draw);
+  }
+  resize();
+  let rafId = requestAnimationFrame(draw);
+
+  WM.create({
+    id:'neuralgraph', title:'Neural Activity', icon:'🧠', width:760, height:540, body,
+    onClose:()=>{ cancelAnimationFrame(rafId); window.removeEventListener('resize', resize); }
+  });
+  setTimeout(resize, 50);
+};
+
+/* =========================================================
+   SYSTEM OBSERVATORY (analytics instead of boring settings)
+   ========================================================= */
+Apps.observatory = function(){
+  const body = document.createElement('div');
+  body.className = 'app-pad'; body.style.overflow='auto'; body.style.height='100%';
+  const totalFiles = FS.flatten().filter(f=>f.item.type==='file').length;
+  const totalFolders = FS.flatten().filter(f=>f.item.type==='folder').length;
+  const topApps = Object.entries(STATS.appsOpened).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  body.innerHTML = `
+    <div class="app-h">🔭 System Observatory</div>
+    <div class="muted" style="margin-bottom:14px;">A live readout of everything happening inside NexusOS.</div>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px;">
+      ${[
+        ['Files', totalFiles],
+        ['Folders', totalFolders],
+        ['Notes', NOTES.list.length],
+        ['Automations', AUTO.flows.length],
+        ['Commands Run', STATS.commandsRun],
+        ['AI Interactions', STATS.aiInteractions],
+        ['XP', STATS.xp],
+        ['Level', levelFromXP(STATS.xp)],
+        ['Plugins Installed', STATS.pluginsInstalled],
+      ].map(([label,val])=>`
+        <div style="border:1px solid var(--border); border-radius:12px; padding:14px; background:rgba(255,255,255,0.02);">
+          <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:2px; color:var(--text-low); text-transform:uppercase;">${label}</div>
+          <div style="font-family:var(--font-display); font-size:26px; font-weight:700; margin-top:6px;">${val}</div>
+        </div>
+      `).join('')}
+    </div>
+    <h4 style="font-family:var(--font-display); font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--text-low); margin-bottom:10px;">Most Used Apps</h4>
+    <div id="topAppsList"></div>
+    <h4 style="font-family:var(--font-display); font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--text-low); margin:18px 0 10px;">Recent System Events</h4>
+    <div id="eventsList"></div>
+  `;
+  const topList = body.querySelector('#topAppsList');
+  if(topApps.length===0) topList.innerHTML = '<div class="muted">No app usage recorded yet.</div>';
+  const maxCount = Math.max(1, ...topApps.map(a=>a[1]));
+  topApps.forEach(([id,count])=>{
+    const app = APP_REGISTRY.find(a=>a.id===id);
+    const row = document.createElement('div');
+    row.style.marginBottom='8px';
+    row.innerHTML = `<div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;"><span>${app?app.icon:''} ${app?app.name:id}</span><span class="muted">${count}×</span></div>
+      <div style="height:6px; border-radius:4px; background:rgba(255,255,255,0.06); overflow:hidden;"><div style="height:100%; width:${(count/maxCount)*100}%; background:linear-gradient(90deg,var(--accent),var(--accent-2));"></div></div>`;
+    topList.appendChild(row);
+  });
+  const evList = body.querySelector('#eventsList');
+  ACTIVITY.log.slice(0,12).forEach(a=>{
+    const row = document.createElement('div');
+    row.className='list-row';
+    row.innerHTML = `<span>${a.text}</span><span class="muted" style="font-family:var(--font-mono);">${new Date(a.time).toLocaleTimeString()}</span>`;
+    evList.appendChild(row);
+  });
+  WM.create({id:'observatory', title:'System Observatory', icon:'🔭', width:660, height:560, body});
+};
+
+/* =========================================================
+   ACHIEVEMENTS
+   ========================================================= */
+Apps.achievements = function(){
+  const body = document.createElement('div');
+  body.className = 'app-pad'; body.style.overflow='auto'; body.style.height='100%';
+  body.innerHTML = `<div class="app-h">🏆 Achievements</div><div class="muted" style="margin-bottom:14px;">Level ${levelFromXP(STATS.xp)} · ${STATS.xp} XP total</div><div id="achList"></div>`;
+  const list = body.querySelector('#achList');
+  ACHIEVEMENT_DEFS.forEach(def=>{
+    const unlocked = ACHIEVEMENTS.unlocked.includes(def.id);
+    const el = document.createElement('div');
+    el.className='list-row';
+    el.style.opacity = unlocked?'1':'0.45';
+    el.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><span style="font-size:22px;">${unlocked?'🏆':'🔒'}</span><div><div style="font-weight:700;">${def.name}</div><div class="muted">${def.desc}</div></div></div><span class="muted" style="font-family:var(--font-mono);">+${def.xp} XP</span>`;
+    list.appendChild(el);
+  });
+  WM.create({id:'achievements', title:'Achievements', icon:'🏆', width:480, height:520, body});
+};
+
+/* =========================================================
+   USER PROFILE
+   ========================================================= */
+Apps.profile = function(){
+  const body = document.createElement('div');
+  body.className = 'app-pad'; body.style.height='100%'; body.style.overflow='auto';
+  const topApps = Object.entries(STATS.appsOpened).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const traits = getActiveTraits();
+  body.innerHTML = `
+    <div class="app-h">🌱 Your Profile</div>
+    <div class="muted" style="margin-bottom:16px;">A living snapshot of how you use NexusOS — it grows as you do.</div>
+
+    <div style="display:flex; gap:12px; margin-bottom:18px; flex-wrap:wrap;">
+      ${[
+        ['Level', levelFromXP(STATS.xp)],
+        ['Total XP', STATS.xp],
+        ['Streak', getStreak()+' day'+(getStreak()===1?'':'s')],
+        ['Session', getSessionMinutes()+' min'],
+      ].map(([label,val])=>`
+        <div style="flex:1; min-width:110px; border:1px solid var(--border); border-radius:12px; padding:12px; background:rgba(255,255,255,0.35);">
+          <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:2px; color:var(--text-low); text-transform:uppercase;">${label}</div>
+          <div style="font-family:var(--font-display); font-size:22px; font-weight:600; margin-top:4px;">${val}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <h4 style="font-family:var(--font-display); font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--text-low); margin-bottom:10px;">Traits</h4>
+    <div id="traitRow" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;"></div>
+
+    <h4 style="font-family:var(--font-display); font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--text-low); margin-bottom:10px;">Favorite Apps</h4>
+    <div id="favAppsList" style="margin-bottom:18px;"></div>
+
+    <h4 style="font-family:var(--font-display); font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--text-low); margin-bottom:10px;">Activity Counts</h4>
+    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;">
+      ${[
+        ['Notes written', STATS.notesCreated],
+        ['Files created', STATS.filesCreated],
+        ['Folders created', STATS.foldersCreated],
+        ['Commands run', STATS.commandsRun],
+        ['AI interactions', STATS.aiInteractions],
+        ['Automations built', STATS.automationsCreated],
+      ].map(([label,val])=>`<div class="list-row" style="margin-bottom:0;"><span>${label}</span><span class="muted" style="font-family:var(--font-mono);">${val}</span></div>`).join('')}
+    </div>
+  `;
+  const traitRow = body.querySelector('#traitRow');
+  if(traits.length===0){
+    traitRow.innerHTML = `<div class="muted">Keep using NexusOS — traits appear as patterns emerge.</div>`;
+  } else {
+    traits.forEach(t=>{
+      const col = TAG_COLOR_CYCLE[Math.abs(t.id.length)%TAG_COLOR_CYCLE.length];
+      const badge = document.createElement('div');
+      badge.style.padding='8px 14px'; badge.style.borderRadius='20px';
+      badge.style.background=col.bg; badge.style.color=col.fg;
+      badge.style.fontFamily='var(--font-display)'; badge.style.fontWeight='600'; badge.style.fontSize='12.5px';
+      badge.textContent = `${t.icon} ${t.name}`;
+      traitRow.appendChild(badge);
+    });
+  }
+  const favAppsList = body.querySelector('#favAppsList');
+  if(topApps.length===0){ favAppsList.innerHTML='<div class="muted">No app usage yet.</div>'; }
+  topApps.forEach(([id,count])=>{
+    const app = APP_REGISTRY.find(a=>a.id===id);
+    if(!app) return;
+    const row = document.createElement('div');
+    row.className='list-row';
+    row.innerHTML = `<span>${app.icon} ${app.name}</span><span class="muted" style="font-family:var(--font-mono);">${count}× opened</span>`;
+    favAppsList.appendChild(row);
+  });
+  WM.create({id:'profile', title:'Your Profile', icon:'🌱', width:560, height:600, body});
+};
+
+/* =========================================================
+   FAVORITES
+   ========================================================= */
+Apps.favorites = function(){
+  const body = document.createElement('div');
+  body.className = 'app-pad'; body.style.height='100%'; body.style.overflow='auto';
+  body.innerHTML = `
+    <div class="app-h">⭐ Favorites</div>
+    <div class="muted" style="margin-bottom:14px;">Things you've starred — Nexus keeps these close at hand.</div>
+    <div id="favList"></div>
+  `;
+  const ICONS = {note:'📝', file:'📄', folder:'📁', event:'📅'};
+  function render(){
+    const list = body.querySelector('#favList');
+    list.innerHTML='';
+    if(FAVORITES.items.length===0){ list.innerHTML='<div class="muted">Nothing starred yet. Star a note, file, folder, or calendar event to see it here.</div>'; return; }
+    FAVORITES.items.slice().sort((a,b)=>b.addedAt-a.addedAt).forEach((fav,idx)=>{
+      const row = document.createElement('div');
+      row.className='list-row';
+      row.style.cursor='pointer';
+      row.innerHTML = `<div style="display:flex; align-items:center; gap:10px;"><span style="font-size:18px;">${ICONS[fav.type]||'⭐'}</span><div><div style="font-weight:600;">${fav.label}</div><div class="muted" style="font-size:11px; text-transform:capitalize;">${fav.type}</div></div></div>`;
+      row.onclick = ()=>{
+        if(fav.type==='note'){ NOTES.activeId = fav.key; openApp('notes'); }
+        else if(fav.type==='file' || fav.type==='folder'){ openApp('explorer'); }
+        else if(fav.type==='event'){ openApp('calendar'); }
+      };
+      const removeBtn = document.createElement('button');
+      removeBtn.className='btn danger'; removeBtn.textContent='Remove';
+      removeBtn.onclick = (e)=>{ e.stopPropagation(); FAVORITES.items.splice(FAVORITES.items.indexOf(fav),1); saveState(); render(); };
+      row.appendChild(removeBtn);
+      list.appendChild(row);
+    });
+  }
+  render();
+  WM.create({id:'favorites', title:'Favorites', icon:'⭐', width:560, height:480, body});
+};
+
+
+Apps.recyclebin = function(){
+  purgeExpiredRecycleItems();
+  const body = document.createElement('div');
+  body.className = 'app-pad'; body.style.height='100%'; body.style.overflow='auto';
+  body.innerHTML = `
+    <div class="app-h">🗂️ Recycle Bin</div>
+    <div class="muted" style="margin-bottom:14px;">Deleted items rest here for 30 days before fading away for good.</div>
+    <div id="binList"></div>
+  `;
+  function render(){
+    const list = body.querySelector('#binList');
+    list.innerHTML='';
+    if(RECYCLE_BIN.items.length===0){ list.innerHTML='<div class="muted">The bin is empty — nothing to grieve.</div>'; return; }
+    RECYCLE_BIN.items.forEach((entry, idx)=>{
+      const daysLeft = Math.max(0, 30 - Math.floor((Date.now()-entry.deletedAt)/(24*60*60*1000)));
+      const icon = entry.kind==='note' ? '📝' : (entry.item.type==='folder' ? '📁' : iconForExt(entry.item.ext));
+      const row = document.createElement('div');
+      row.className='list-row';
+      row.innerHTML = `<div style="display:flex; align-items:center; gap:10px;"><span style="font-size:18px;">${icon}</span><div><div style="font-weight:600;">${entry.item.name||entry.item.title||'Untitled'}</div><div class="muted" style="font-size:11px;">Deleted ${new Date(entry.deletedAt).toLocaleDateString()} · expires in ${daysLeft} day${daysLeft===1?'':'s'}</div></div></div>`;
+      const actions = document.createElement('div');
+      actions.style.display='flex'; actions.style.gap='6px';
+      const restoreBtn = document.createElement('button'); restoreBtn.className='btn primary'; restoreBtn.textContent='Restore';
+      restoreBtn.onclick = ()=>{
+        if(entry.kind==='note'){
+          NOTES.list.push(entry.item);
+          RECYCLE_BIN.items.splice(idx,1);
+          logActivity('note', `Restored note "${entry.item.title||'Untitled'}" from Recycle Bin`, 'notes');
+          saveState(); toast('Note restored');
+        } else {
+          if(FS.restoreFromBin(idx)) toast('Item restored');
+        }
+        render();
+      };
+      const delBtn = document.createElement('button'); delBtn.className='btn danger'; delBtn.textContent='Delete forever';
+      delBtn.onclick = ()=>{
+        if(confirm(`Permanently delete "${entry.item.name||entry.item.title}"? This cannot be undone.`)){
+          RECYCLE_BIN.items.splice(idx,1);
+          saveState(); render();
+        }
+      };
+      actions.append(restoreBtn, delBtn);
+      row.appendChild(actions);
+      list.appendChild(row);
+    });
+  }
+  render();
+  WM.create({id:'recyclebin', title:'Recycle Bin', icon:'🗂️', width:580, height:480, body});
+};
+
+/* =========================================================
+   WEEKLY INSIGHTS
+   ========================================================= */
+Apps.insights = function(){
+  const body = document.createElement('div');
+  body.className = 'app-pad'; body.style.height='100%'; body.style.overflow='auto';
+  const ONE_WEEK = 7*24*60*60*1000;
+  const recent = ACTIVITY.log.filter(a=> Date.now()-a.time < ONE_WEEK);
+  const counts = {};
+  recent.forEach(a=>{ counts[a.kind] = (counts[a.kind]||0)+1; });
+  const filesCount = recent.filter(a=>a.kind==='file').length;
+  const notesCount = recent.filter(a=>a.kind==='note').length;
+  const aiCount = recent.filter(a=>a.kind==='ai').length;
+  const automationCount = recent.filter(a=>a.kind==='automation').length;
+  // most-used space this week, derived from sourceApp tallies
+  const spaceTally = {};
+  recent.forEach(a=>{ if(a.sourceApp) spaceTally[a.sourceApp] = (spaceTally[a.sourceApp]||0)+1; });
+  const topSpaceEntry = Object.entries(spaceTally).sort((a,b)=>b[1]-a[1])[0];
+  const topSpace = topSpaceEntry ? APP_REGISTRY.find(a=>a.id===topSpaceEntry[0]) : null;
+
+  body.innerHTML = `
+    <div class="app-h">📈 Weekly Insights</div>
+    <div class="muted" style="margin-bottom:16px;">A gentle look back at the last 7 days.</div>
+    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:18px;">
+      ${[
+        ['Files &amp; folders created', filesCount, '📁'],
+        ['Notes written', notesCount, '📝'],
+        ['AI interactions', aiCount, '✨'],
+        ['Automations built', automationCount, '⚡'],
+      ].map(([label,val,icon])=>`
+        <div style="border:1px solid var(--border); border-radius:14px; padding:16px; background:rgba(255,255,255,0.35);">
+          <div style="font-size:22px; margin-bottom:6px;">${icon}</div>
+          <div style="font-family:var(--font-display); font-size:28px; font-weight:600;">${val}</div>
+          <div class="muted" style="font-size:12px;">${label}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="border:1px solid var(--border); border-radius:14px; padding:16px; background:rgba(255,255,255,0.35); margin-bottom:18px;">
+      <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:2px; color:var(--text-low); text-transform:uppercase; margin-bottom:8px;">Most Used Space</div>
+      ${topSpace
+        ? `<div style="font-family:var(--font-display); font-size:20px; font-weight:600;">${topSpace.icon} ${topSpace.name}</div><div class="muted" style="font-size:12px; margin-top:4px;">${topSpaceEntry[1]} events this week</div>`
+        : `<div class="muted">Not enough activity yet this week.</div>`}
+    </div>
+    <div style="border:1px solid var(--border); border-radius:14px; padding:16px; background:rgba(255,255,255,0.35);">
+      <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:2px; color:var(--text-low); text-transform:uppercase; margin-bottom:8px;">Streak</div>
+      <div style="font-family:var(--font-display); font-size:20px; font-weight:600;">🔥 ${getStreak()} day${getStreak()===1?'':'s'} active</div>
+    </div>
+  `;
+  WM.create({id:'insights', title:'Weekly Insights', icon:'📈', width:560, height:560, body});
+};
+
+/* =========================================================
+   MOODBOARD / CANVAS
+   ========================================================= */
+const MOOD_SWATCHES = ['#35858E','#7DA78C','#C2D099','#E6EEC9','#F58F5C','#263238','#FBFBF6','#9B8FB5'];
+
+Apps.moodboard = function(){
+  const body = document.createElement('div');
+  body.style.height='100%'; body.style.display='flex'; body.style.flexDirection='column'; body.style.overflow='hidden';
+  body.innerHTML = `
+    <div style="display:flex; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); flex-wrap:wrap; align-items:center; flex-shrink:0;">
+      <button class="btn primary" id="mbAddText">+ Text</button>
+      <button class="btn" id="mbDraw">✏️ Draw</button>
+      <button class="btn" id="mbClearDraw">Clear Drawing</button>
+      <div style="display:flex; gap:4px; margin-left:6px;">
+        ${MOOD_SWATCHES.map(c=>`<div class="mb-swatch" data-color="${c}" style="width:22px;height:22px;border-radius:6px;background:${c};border:1px solid rgba(0,0,0,0.1);cursor:pointer;"></div>`).join('')}
+      </div>
+      <button class="btn" id="mbAddSwatchBlock" style="margin-left:auto;">+ Color Block</button>
+      <button class="btn danger" id="mbClearAll">Clear Board</button>
+    </div>
+    <div id="mbCanvas" style="position:relative; flex:1; overflow:hidden; background:repeating-linear-gradient(45deg, rgba(53,133,142,0.02) 0px, rgba(53,133,142,0.02) 2px, transparent 2px, transparent 18px);">
+      <canvas id="mbDrawCanvas" style="position:absolute; inset:0; z-index:1;"></canvas>
+      <div id="mbItemsLayer" style="position:absolute; inset:0; z-index:2;"></div>
+    </div>
+  `;
+  const canvasWrap = body.querySelector('#mbCanvas');
+  const drawCanvas = body.querySelector('#mbDrawCanvas');
+  const itemsLayer = body.querySelector('#mbItemsLayer');
+  const dctx = drawCanvas.getContext('2d');
+  let activeColor = '#35858E';
+  let drawMode = false;
+
+  function resizeDrawCanvas(){
+    drawCanvas.width = canvasWrap.clientWidth;
+    drawCanvas.height = canvasWrap.clientHeight;
+    redrawStrokes();
+  }
+  let strokes = (MOODBOARD.strokes || []).slice();
+  function redrawStrokes(){
+    dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+    strokes.forEach(s=>{
+      if(s.points.length<2) return;
+      dctx.beginPath();
+      dctx.moveTo(s.points[0].x, s.points[0].y);
+      s.points.slice(1).forEach(p=>dctx.lineTo(p.x,p.y));
+      dctx.strokeStyle = s.color; dctx.lineWidth=3; dctx.lineCap='round'; dctx.lineJoin='round';
+      dctx.stroke();
+    });
+  }
+  function persistBoard(){
+    MOODBOARD.strokes = strokes;
+    saveState();
+  }
+
+  let curStroke = null;
+  function onDrawMouseDown(e){
+    if(!drawMode) return;
+    const r = drawCanvas.getBoundingClientRect();
+    curStroke = {points:[{x:e.clientX-r.left,y:e.clientY-r.top}], color:activeColor};
+    strokes.push(curStroke);
+  }
+  function onDrawMouseMove(e){
+    if(!drawMode || !curStroke) return;
+    const r = drawCanvas.getBoundingClientRect();
+    curStroke.points.push({x:e.clientX-r.left,y:e.clientY-r.top});
+    redrawStrokes();
+  }
+  function onWindowMouseUpForDraw(){
+    if(curStroke){ persistBoard(); curStroke=null; }
+  }
+  drawCanvas.addEventListener('mousedown', onDrawMouseDown);
+  drawCanvas.addEventListener('mousemove', onDrawMouseMove);
+  window.addEventListener('mouseup', onWindowMouseUpForDraw);
+
+  // Single shared drag handler for ALL blocks (instead of one pair of window listeners per block)
+  let dragState = null; // {item, el, sx, sy, ox, oy}
+  function onWindowMouseMoveForDrag(e){
+    if(!dragState) return;
+    const {item, el, sx, sy, ox, oy} = dragState;
+    item.x = ox + (e.clientX-sx); item.y = oy + (e.clientY-sy);
+    el.style.left=item.x+'px'; el.style.top=item.y+'px';
+  }
+  function onWindowMouseUpForDrag(){
+    if(dragState){ dragState=null; persistBoard(); }
+  }
+  window.addEventListener('mousemove', onWindowMouseMoveForDrag);
+  window.addEventListener('mouseup', onWindowMouseUpForDrag);
+
+  function makeBlock(item){
+    const el = document.createElement('div');
+    el.style.position='absolute';
+    el.style.left = item.x+'px'; el.style.top = item.y+'px';
+    el.style.cursor='move';
+    el.style.userSelect='none';
+    let editTimer = null;
+    if(item.type==='text'){
+      el.style.maxWidth='220px';
+      el.innerHTML = `<div contenteditable="true" style="background:rgba(255,255,255,0.85); border:1px solid var(--border-strong); border-radius:10px; padding:10px 12px; font-family:var(--font-body); font-size:13px; color:var(--text-hi); box-shadow:0 6px 18px rgba(53,133,142,0.1); min-width:80px;">${item.text}</div>
+      <button class="mb-del" style="position:absolute; top:-8px; right:-8px; width:18px;height:18px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:10px;cursor:pointer;">×</button>`;
+      const editable = el.querySelector('[contenteditable]');
+      editable.addEventListener('input', ()=>{
+        if(!editTimer) recordHistory('moodboard', 'Edit text block');
+        if(editTimer) clearTimeout(editTimer);
+        editTimer = setTimeout(()=>{ editTimer=null; }, 1500);
+        item.text = editable.innerHTML; persistBoard();
+      });
+      editable.addEventListener('mousedown', e=>e.stopPropagation());
+    } else if(item.type==='swatch'){
+      el.innerHTML = `<div style="width:64px;height:64px;border-radius:14px;background:${item.color}; box-shadow:0 6px 18px rgba(53,133,142,0.15); border:1px solid rgba(0,0,0,0.08);"></div>
+      <button class="mb-del" style="position:absolute; top:-8px; right:-8px; width:18px;height:18px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:10px;cursor:pointer;">×</button>`;
+    }
+    el.querySelector('.mb-del').onclick = (e)=>{
+      e.stopPropagation();
+      recordHistory('moodboard', 'Remove board item');
+      MOODBOARD.items = MOODBOARD.items.filter(i=>i!==item);
+      el.remove(); persistBoard();
+    };
+    el.addEventListener('mousedown', (e)=>{
+      if(drawMode) return;
+      recordHistory('moodboard', 'Move board item');
+      dragState = {item, el, sx:e.clientX, sy:e.clientY, ox:item.x, oy:item.y};
+      e.preventDefault();
+    });
+    return el;
+  }
+  function renderItems(){
+    itemsLayer.innerHTML='';
+    MOODBOARD.items.forEach(item=> itemsLayer.appendChild(makeBlock(item)));
+  }
+
+  body.querySelector('#mbAddText').onclick = ()=>{
+    recordHistory('moodboard', 'Add text block');
+    const item = {type:'text', text:'New idea...', x:40+Math.random()*120, y:40+Math.random()*100};
+    MOODBOARD.items.push(item); renderItems(); persistBoard();
+    logActivity('system', 'Added a text block to Moodboard');
+  };
+  body.querySelector('#mbAddSwatchBlock').onclick = ()=>{
+    recordHistory('moodboard', 'Add color block');
+    const item = {type:'swatch', color:activeColor, x:60+Math.random()*150, y:60+Math.random()*120};
+    MOODBOARD.items.push(item); renderItems(); persistBoard();
+  };
+  body.querySelectorAll('.mb-swatch').forEach(sw=>{
+    sw.onclick = ()=>{ activeColor = sw.dataset.color; body.querySelectorAll('.mb-swatch').forEach(s=>s.style.outline='none'); sw.style.outline=`2px solid ${activeColor}`; };
+  });
+  const drawBtn = body.querySelector('#mbDraw');
+  drawBtn.onclick = ()=>{
+    drawMode = !drawMode;
+    drawBtn.classList.toggle('primary', drawMode);
+    drawCanvas.style.pointerEvents = drawMode ? 'auto' : 'none';
+    itemsLayer.style.pointerEvents = drawMode ? 'none' : 'auto';
+    toast(drawMode ? 'Drawing mode on — sketch on the canvas' : 'Drawing mode off');
+  };
+  drawCanvas.style.pointerEvents = 'none';
+  body.querySelector('#mbClearDraw').onclick = ()=>{
+    recordHistory('moodboard', 'Clear drawing');
+    strokes = []; redrawStrokes(); persistBoard();
+  };
+  body.querySelector('#mbClearAll').onclick = ()=>{
+    if(confirm('Clear the entire moodboard? This removes all text, colors, and drawings.')){
+      recordHistory('moodboard', 'Clear board');
+      MOODBOARD.items = []; strokes = [];
+      renderItems(); redrawStrokes(); persistBoard();
+    }
+  };
+
+  renderItems();
+  window.addEventListener('resize', resizeDrawCanvas);
+
+  WM.create({
+    id:'moodboard', title:'Moodboard', icon:'🎨', width:720, height:520, body,
+    onClose:()=>{
+      window.removeEventListener('mouseup', onWindowMouseUpForDraw);
+      window.removeEventListener('mousemove', onWindowMouseMoveForDrag);
+      window.removeEventListener('mouseup', onWindowMouseUpForDrag);
+      window.removeEventListener('resize', resizeDrawCanvas);
+    }
+  });
+  setTimeout(resizeDrawCanvas, 50);
+};
+
+/* =========================================================
+   PLUGIN / WIDGET CREATOR
+   ========================================================= */
+const WIDGET_ICON_CHOICES = ['🌿','🔔','📌','💡','🎯','📊','🌙','☀️','🧩','🪴','✨','🔥'];
+const WIDGET_CODE_TEMPLATE = `// helpers available: toast, openApp, FS, NOTES, CAL, setText, setHTML, container
+// Example: show how many notes exist
+setText("You have " + NOTES.list.length + " notes");`;
+
+Apps.widgetcreator = function(){
+  const body = document.createElement('div');
+  body.className = 'app-pad'; body.style.height='100%'; body.style.overflow='auto';
+  body.innerHTML = `
+    <div class="app-h">🔧 Widget Creator</div>
+    <div class="muted" style="margin-bottom:14px;">Build a tiny widget for your desktop rail. Give it a name, pick an icon, and write a few lines of JS.</div>
+    <div style="display:flex; flex-direction:column; gap:10px; max-width:480px;">
+      <input id="wcName" placeholder="Widget name (e.g. Quote of the Day)">
+      <div>
+        <div class="muted" style="font-size:11px; margin-bottom:6px;">Choose an icon</div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          ${WIDGET_ICON_CHOICES.map(ic=>`<div class="wc-icon-choice" data-icon="${ic}" style="width:34px;height:34px;border-radius:9px;border:1px solid var(--border); display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;">${ic}</div>`).join('')}
+        </div>
+      </div>
+      <div class="muted" style="font-size:11px; margin-top:4px;">Widget logic (JavaScript)</div>
+      <textarea id="wcCode" style="min-height:140px; font-family:var(--font-mono); font-size:12px;">${WIDGET_CODE_TEMPLATE}</textarea>
+      <div style="display:flex; gap:10px;">
+        <button class="btn primary" id="wcCreate">+ Add to Widget Rail</button>
+        <button class="btn" id="wcTest">▶ Test Run</button>
+      </div>
+      <div id="wcTestOutput" class="muted" style="font-size:12px; border:1px solid var(--border); border-radius:10px; padding:10px; display:none;"></div>
+    </div>
+    <h4 style="font-family:var(--font-display); font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--text-low); margin:22px 0 10px;">Your Widgets</h4>
+    <div id="wcList"></div>
+  `;
+  let selectedIcon = WIDGET_ICON_CHOICES[0];
+  body.querySelectorAll('.wc-icon-choice').forEach(el=>{
+    el.onclick = ()=>{
+      body.querySelectorAll('.wc-icon-choice').forEach(e=>e.style.background='');
+      el.style.background = 'rgba(53,133,142,0.14)';
+      selectedIcon = el.dataset.icon;
+    };
+  });
+  body.querySelector('.wc-icon-choice').style.background = 'rgba(53,133,142,0.14)';
+
+  function renderList(){
+    const list = body.querySelector('#wcList');
+    list.innerHTML='';
+    if(CUSTOM_WIDGETS.list.length===0){ list.innerHTML='<div class="muted">No custom widgets yet — build your first one above.</div>'; return; }
+    CUSTOM_WIDGETS.list.forEach((cw,idx)=>{
+      const row = document.createElement('div');
+      row.className='list-row';
+      row.innerHTML = `<span>${cw.icon} ${cw.name}</span>`;
+      const delBtn = document.createElement('button');
+      delBtn.className='btn danger'; delBtn.textContent='Remove';
+      delBtn.onclick = ()=>{
+        CUSTOM_WIDGETS.list.splice(idx,1);
+        saveState(); renderList(); buildWidgetRail();
+        toast('Widget removed');
+      };
+      row.appendChild(delBtn);
+      list.appendChild(row);
+    });
+  }
+
+  body.querySelector('#wcTest').onclick = ()=>{
+    const code = body.querySelector('#wcCode').value;
+    const out = body.querySelector('#wcTestOutput');
+    out.style.display='block';
+    out.innerHTML='';
+    try{
+      const helpers = {
+        toast, openApp, FS, NOTES, CAL,
+        container: out,
+        setText:(t)=>{ out.textContent = t; },
+        setHTML:(h)=>{ out.innerHTML = h; },
+      };
+      const fn = new Function('helpers','container', `with(helpers){\n${code}\n}`);
+      fn(helpers, out);
+      if(!out.innerHTML) out.textContent = '(no output — try setText() or setHTML())';
+    }catch(e){
+      out.innerHTML = `<span style="color:var(--danger);">Error: ${e.message}</span>`;
+    }
+  };
+
+  body.querySelector('#wcCreate').onclick = ()=>{
+    const name = body.querySelector('#wcName').value.trim();
+    const code = body.querySelector('#wcCode').value;
+    if(!name){ toast('Give your widget a name first'); return; }
+    CUSTOM_WIDGETS.list.push({name, icon:selectedIcon, code, createdAt:Date.now()});
+    saveState();
+    logActivity('system', `Created custom widget "${name}"`);
+    awardXP(8, 'Widget created');
+    toast(`✨ "${name}" added to your widget rail`);
+    renderList();
+    buildWidgetRail();
+    body.querySelector('#wcName').value='';
+  };
+
+  renderList();
+  WM.create({id:'widgetcreator', title:'Widget Creator', icon:'🔧', width:560, height:600, body});
+};
+
+
+const TIMELINE_ICONS = {
+  file:'📁', note:'📝', calendar:'📅', automation:'⚡', plugin:'🧩',
+  ai:'✨', achievement:'🏆', system:'🌱'
+};
+Apps.timeline = function(){
+  const body = document.createElement('div');
+  body.className = 'app-pad'; body.style.height='100%'; body.style.display='flex'; body.style.flexDirection='column';
+  body.innerHTML = `
+    <div class="app-h">📜 Timeline</div>
+    <div class="muted" style="margin-bottom:10px;">Every memory NexusOS has recorded — search or filter to find anything.</div>
+    <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+      <input id="tlSearch" placeholder="Search the timeline..." style="flex:1; min-width:160px;">
+      <select id="tlFilter">
+        <option value="">All kinds</option>
+        <option value="file">Files</option>
+        <option value="note">Notes</option>
+        <option value="calendar">Calendar</option>
+        <option value="automation">Automations</option>
+        <option value="plugin">Plugins &amp; Themes</option>
+        <option value="ai">AI Core</option>
+        <option value="achievement">Achievements</option>
+        <option value="system">System</option>
+      </select>
+    </div>
+    <div id="tlList" style="flex:1; overflow:auto;"></div>
+  `;
+  function groupByDay(items){
+    const groups = {};
+    items.forEach(it=>{
+      const day = new Date(it.time).toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'});
+      groups[day] = groups[day]||[];
+      groups[day].push(it);
+    });
+    return groups;
+  }
+  function render(){
+    const q = body.querySelector('#tlSearch').value.toLowerCase().trim();
+    const kind = body.querySelector('#tlFilter').value;
+    let items = ACTIVITY.log.filter(a=>{
+      if(kind && a.kind!==kind) return false;
+      if(q && !a.text.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    const list = body.querySelector('#tlList');
+    list.innerHTML='';
+    if(items.length===0){ list.innerHTML='<div class="muted">Nothing matches yet.</div>'; return; }
+    const groups = groupByDay(items);
+    Object.entries(groups).forEach(([day, entries])=>{
+      const head = document.createElement('div');
+      head.style.fontFamily='var(--font-display)';
+      head.style.fontWeight='600';
+      head.style.fontSize='13px';
+      head.style.color='var(--text-mid)';
+      head.style.margin='14px 0 6px';
+      head.textContent = day;
+      list.appendChild(head);
+      entries.forEach(a=>{
+        const row = document.createElement('div');
+        row.className = 'list-row';
+        row.style.cursor = a.sourceApp ? 'pointer' : 'default';
+        const time = new Date(a.time).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+        row.innerHTML = `<div style="display:flex; align-items:center; gap:10px;"><span style="font-size:16px;">${TIMELINE_ICONS[a.kind]||'•'}</span><div><div style="font-size:13px;">${a.text}</div><div class="muted" style="font-family:var(--font-mono); font-size:10.5px;">${time}</div></div></div>${a.sourceApp?'<span class="muted">↗</span>':''}`;
+        if(a.sourceApp) row.onclick = ()=> openApp(a.sourceApp);
+        list.appendChild(row);
+      });
+    });
+  }
+  body.querySelector('#tlSearch').addEventListener('input', render);
+  body.querySelector('#tlFilter').addEventListener('change', render);
+  render();
+  WM.create({id:'timeline', title:'Timeline', icon:'📜', width:600, height:560, body});
+};
+
+/* =========================================================
+   NEXUS JOURNEY — visual path through the session
+   ========================================================= */
+Apps.journey = function(){
+  const body = document.createElement('div');
+  body.style.height='100%'; body.style.display='flex'; body.style.flexDirection='column'; body.style.overflow='hidden';
+  body.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); flex-shrink:0;">
+      <div>
+        <div style="font-family:var(--font-display); font-size:15px; font-weight:600;">🧭 Nexus Journey</div>
+        <div class="muted" style="font-size:11px;">Your path through this session — click any stop to reopen it</div>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <button class="icon-btn" id="jrZoomOut" data-tip="Zoom out">−</button>
+        <span class="muted" id="jrZoomLabel" style="font-family:var(--font-mono); font-size:11px; width:42px; text-align:center;">100%</span>
+        <button class="icon-btn" id="jrZoomIn" data-tip="Zoom in">+</button>
+      </div>
+    </div>
+    <div id="jrScroll" style="flex:1; overflow:auto; padding:30px 20px;">
+      <div id="jrPath" style="position:relative; max-width:480px; margin:0 auto; transform-origin:top center;"></div>
+    </div>
+  `;
+  let zoom = 1;
+  function applyZoom(){
+    body.querySelector('#jrPath').style.transform = `scale(${zoom})`;
+    body.querySelector('#jrZoomLabel').textContent = Math.round(zoom*100)+'%';
+  }
+  body.querySelector('#jrZoomIn').onclick = ()=>{ zoom = Math.min(1.6, zoom+0.15); applyZoom(); };
+  body.querySelector('#jrZoomOut').onclick = ()=>{ zoom = Math.max(0.5, zoom-0.15); applyZoom(); };
+
+  function render(){
+    // Build a journey of meaningful stops: anything with a sourceApp, oldest first, deduped consecutive repeats
+    const meaningful = ACTIVITY.log.filter(a=>a.sourceApp).slice().reverse();
+    const stops = [];
+    meaningful.forEach(a=>{
+      const last = stops[stops.length-1];
+      if(last && last.sourceApp===a.sourceApp && (a.time-last.time) < 60000){
+        last.count = (last.count||1)+1;
+        last.lastText = a.text;
+        last.time = a.time;
+      } else {
+        stops.push({...a, count:1, lastText:a.text});
+      }
+    });
+    const path = body.querySelector('#jrPath');
+    path.innerHTML='';
+    if(stops.length===0){
+      path.innerHTML = `<div class="muted" style="text-align:center; padding:40px 0;">Your journey will appear here as you use NexusOS — open some apps, create a note, talk to Nexus.</div>`;
+      return;
+    }
+    stops.forEach((s,i)=>{
+      const app = APP_REGISTRY.find(a=>a.id===s.sourceApp);
+      const icon = TIMELINE_ICONS[s.kind] || (app?app.icon:'•');
+      const row = document.createElement('div');
+      row.style.position='relative';
+      row.style.paddingLeft='46px';
+      row.style.paddingBottom = i===stops.length-1 ? '4px' : '34px';
+      row.innerHTML = `
+        ${i<stops.length-1 ? `<div style="position:absolute; left:17px; top:36px; bottom:-4px; width:2px; background:linear-gradient(180deg, rgba(53,133,142,0.35), rgba(125,167,140,0.15));"></div>` : ''}
+        <div class="jr-node" style="position:absolute; left:0; top:0; width:36px; height:36px; border-radius:50%; background:var(--panel-solid); border:2px solid var(--border-strong); display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; transition:.15s; box-shadow:0 4px 12px rgba(53,133,142,0.12);">${icon}</div>
+        <div class="jr-card" style="background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:12px 14px; cursor:pointer; transition:.15s;">
+          <div style="font-family:var(--font-display); font-weight:600; font-size:13.5px; margin-bottom:2px;">${app ? app.name : s.sourceApp}</div>
+          <div class="muted" style="font-size:11.5px; line-height:1.4;">${s.lastText}${s.count>1 ? ` <span style="color:var(--accent);">+${s.count-1} more</span>` : ''}</div>
+          <div class="muted" style="font-size:10px; font-family:var(--font-mono); margin-top:5px;">${new Date(s.time).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+      `;
+      const openIt = ()=>{ if(s.sourceApp) openApp(s.sourceApp); };
+      row.querySelector('.jr-node').onclick = openIt;
+      row.querySelector('.jr-card').onclick = openIt;
+      row.querySelector('.jr-card').addEventListener('mouseenter', function(){ this.style.borderColor='var(--border-strong)'; this.style.transform='translateX(3px)'; });
+      row.querySelector('.jr-card').addEventListener('mouseleave', function(){ this.style.borderColor='var(--border)'; this.style.transform='translateX(0)'; });
+      path.appendChild(row);
+    });
+  }
+  render();
+  applyZoom();
+  WM.create({id:'journey', title:'Nexus Journey', icon:'🧭', width:560, height:600, body});
+};
+
+/* =========================================================
+   LEGACY TREE — a tree that grows with real usage
+   ========================================================= */
+const TREE_MILESTONES = [
+  {id:'branch1', type:'branch', need:10, metric:'filesCreated', label:'10 files created', desc:'Your tree grew its first branch.'},
+  {id:'flower1', type:'flower', need:25, metric:'notesCreated', label:'25 notes written', desc:'Flowers bloomed from your thinking.'},
+  {id:'fruit1', type:'fruit', need:50, metric:'aiInteractions', label:'50 AI commands', desc:'Your collaboration with Nexus bore fruit.'},
+  {id:'bird1', type:'bird', need:100, metric:'xp', label:'100 XP earned', desc:'A bird came to visit — your garden is thriving.'},
+  {id:'branch2', type:'branch', need:30, metric:'filesCreated', label:'30 files created', desc:'A second branch reached outward.'},
+  {id:'flower2', type:'flower', need:60, metric:'notesCreated', label:'60 notes written', desc:'More flowers — your ideas keep multiplying.'},
+  {id:'fruit2', type:'fruit', need:120, metric:'aiInteractions', label:'120 AI commands', desc:'A second fruit, ripened from steady conversation.'},
+  {id:'bird2', type:'bird', need:300, metric:'xp', label:'300 XP earned', desc:'A second bird — your tree is becoming a home.'},
+];
+function getTreeProgress(){
+  return TREE_MILESTONES.map(m=>({
+    ...m,
+    have: STATS[m.metric] || 0,
+    unlocked: (STATS[m.metric] || 0) >= m.need
+  }));
+}
+Apps.legacytree = function(){
+  const body = document.createElement('div');
+  body.style.height='100%'; body.style.position='relative'; body.style.overflow='hidden';
+  body.style.background='linear-gradient(180deg, #F4F5EF 0%, #EDEFE3 70%, #E6EEC9 100%)';
+  body.innerHTML = `
+    <div style="position:absolute; top:12px; left:16px; z-index:5; font-family:var(--font-display); font-size:11px; letter-spacing:3px; color:var(--text-low); text-transform:uppercase;">🌳 Legacy Tree</div>
+    <div style="position:absolute; top:12px; right:16px; z-index:5;"><button class="icon-btn" id="ltMilestones" data-tip="View all milestones">📋</button></div>
+    <canvas id="ltCanvas" style="width:100%; height:100%; display:block;"></canvas>
+    <div id="ltMilestonePanel" style="position:absolute; top:46px; right:14px; width:240px; max-height:78%; overflow:auto; background:var(--panel-solid); border:1px solid var(--border-strong); border-radius:12px; padding:12px; box-shadow:0 14px 36px rgba(53,133,142,0.15); display:none; z-index:6;"></div>
+  `;
+  const canvas = body.querySelector('#ltCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function resize(){ canvas.width = body.clientWidth; canvas.height = body.clientHeight; }
+  resize();
+  const onResize = ()=>resize();
+  window.addEventListener('resize', onResize);
+
+  const progress = getTreeProgress();
+  const unlockedCount = progress.filter(p=>p.unlocked).length;
+
+  // deterministic pseudo-random branch layout, seeded so it doesn't reshuffle every repaint
+  function seededRand(seed){ let x = Math.sin(seed)*10000; return x-Math.floor(x); }
+
+  function drawBranch(x, y, len, angle, depth, maxDepth, seedBase){
+    if(depth>maxDepth || len<8) return [];
+    const x2 = x + Math.cos(angle)*len;
+    const y2 = y + Math.sin(angle)*len;
+    ctx.beginPath();
+    ctx.moveTo(x,y); ctx.lineTo(x2,y2);
+    ctx.strokeStyle = `rgba(125,167,140,${0.9 - depth*0.08})`;
+    ctx.lineWidth = Math.max(1.5, 7-depth*1.3);
+    ctx.lineCap='round';
+    ctx.stroke();
+    const tips = [{x:x2,y:y2,depth}];
+    if(depth<maxDepth){
+      const spread = 0.45 + seededRand(seedBase+depth)*0.25;
+      tips.push(...drawBranch(x2,y2, len*0.78, angle-spread, depth+1, maxDepth, seedBase+1));
+      tips.push(...drawBranch(x2,y2, len*0.78, angle+spread, depth+1, maxDepth, seedBase+2));
+      if(seededRand(seedBase+depth*3)>0.5 && depth<maxDepth-1){
+        tips.push(...drawBranch(x2,y2, len*0.6, angle+(seededRand(seedBase)-0.5)*0.3, depth+1, maxDepth, seedBase+3));
+      }
+    }
+    return tips;
+  }
+
+  let t = 0;
+  function draw(){
+    t += 0.012;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const baseX = canvas.width/2, baseY = canvas.height-30;
+
+    // ground
+    ctx.beginPath();
+    ctx.ellipse(baseX, baseY+6, 70, 10, 0, 0, Math.PI*2);
+    ctx.fillStyle='rgba(125,167,140,0.12)'; ctx.fill();
+
+    // trunk + branches — depth scales with how many milestones are unlocked
+    const maxDepth = Math.min(2 + Math.floor(unlockedCount/2), 6);
+    const sway = Math.sin(t)*0.015;
+    const tips = drawBranch(baseX, baseY, 70+unlockedCount*4, -Math.PI/2+sway, 0, maxDepth, 7);
+
+    // decorate tips based on unlocked milestone types, cycling through available tips
+    const flowerTips = tips.filter((_,i)=> i%3===0);
+    const fruitTips = tips.filter((_,i)=> i%4===1);
+    const birdTip = tips[Math.floor(tips.length*0.3)];
+
+    const flowerCount = progress.filter(p=>p.type==='flower' && p.unlocked).length;
+    const fruitCount = progress.filter(p=>p.type==='fruit' && p.unlocked).length;
+    const birdCount = progress.filter(p=>p.type==='bird' && p.unlocked).length;
+
+    flowerTips.slice(0, flowerCount*3).forEach((tip,i)=>{
+      const bob = Math.sin(t*1.5+i)*1.5;
+      ctx.beginPath();
+      ctx.arc(tip.x, tip.y+bob, 5, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(245,143,92,0.85)'; ctx.fill();
+      ctx.beginPath();
+      ctx.arc(tip.x, tip.y+bob, 2, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fill();
+    });
+    fruitTips.slice(0, fruitCount*2).forEach((tip,i)=>{
+      const bob = Math.sin(t*1.2+i*2)*1.2;
+      ctx.beginPath();
+      ctx.arc(tip.x, tip.y+bob+4, 4.5, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(194,108,76,0.85)'; ctx.fill();
+    });
+    if(birdCount>0 && birdTip){
+      const flutter = Math.sin(t*3)*3;
+      ctx.font='16px serif';
+      ctx.fillText('🐦', birdTip.x-8, birdTip.y-10+flutter);
+    }
+    if(birdCount>1 && tips[Math.floor(tips.length*0.7)]){
+      const tip2 = tips[Math.floor(tips.length*0.7)];
+      const flutter2 = Math.cos(t*2.6)*3;
+      ctx.font='15px serif';
+      ctx.fillText('🐦', tip2.x-7, tip2.y-9+flutter2);
+    }
+
+    // gentle falling petal particles if any flowers exist
+    if(flowerCount>0 && Math.random()<0.02){
+      ltParticles.push({x: baseX+(Math.random()-0.5)*100, y: baseY-150, vy:0.3+Math.random()*0.3, vx:(Math.random()-0.5)*0.3, life:1});
+    }
+    ltParticles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.life-=0.004;
+      ctx.beginPath(); ctx.arc(p.x,p.y,2.5,0,Math.PI*2);
+      ctx.fillStyle=`rgba(245,143,92,${Math.max(0,p.life*0.6)})`; ctx.fill();
+    });
+    for(let i=ltParticles.length-1;i>=0;i--) if(ltParticles[i].life<=0) ltParticles.splice(i,1);
+
+    rafId = requestAnimationFrame(draw);
+  }
+  const ltParticles = [];
+  let rafId = requestAnimationFrame(draw);
+
+  function renderMilestonePanel(){
+    const panel = body.querySelector('#ltMilestonePanel');
+    panel.innerHTML = `<div style="font-family:var(--font-display); font-weight:600; font-size:12.5px; margin-bottom:8px;">Milestones</div>` +
+      progress.map(p=>{
+        const icon = {branch:'🌿', flower:'🌸', fruit:'🍑', bird:'🐦'}[p.type];
+        const pct = Math.min(100, Math.round((p.have/p.need)*100));
+        return `<div style="margin-bottom:10px; opacity:${p.unlocked?1:0.55};">
+          <div style="font-size:11.5px; display:flex; justify-content:space-between;"><span>${icon} ${p.label}</span><span>${p.unlocked?'✓':pct+'%'}</span></div>
+          <div style="height:4px; background:rgba(53,133,142,0.1); border-radius:3px; margin-top:3px; overflow:hidden;">
+            <div style="height:100%; width:${pct}%; background:${p.unlocked?'var(--accent-2)':'var(--accent)'};"></div>
+          </div>
+        </div>`;
+      }).join('');
+  }
+  body.querySelector('#ltMilestones').onclick = ()=>{
+    const panel = body.querySelector('#ltMilestonePanel');
+    const showing = panel.style.display==='block';
+    if(!showing) renderMilestonePanel();
+    panel.style.display = showing ? 'none' : 'block';
+  };
+
+  WM.create({
+    id:'legacytree', title:'Legacy Tree', icon:'🌳', width:600, height:560, body,
+    onClose:()=>{ cancelAnimationFrame(rafId); window.removeEventListener('resize', onResize); }
+  });
+  setTimeout(resize, 50);
+};
+
+/* =========================================================
+   HOME SCREEN — a single landing page tying the OS together
+   ========================================================= */
+function getTimeGreeting(){
+  const h = new Date().getHours();
+  if(h<5) return 'Working late';
+  if(h<12) return 'Good morning';
+  if(h<17) return 'Good afternoon';
+  if(h<21) return 'Good evening';
+  return 'Good evening';
+}
+function getUpcomingEvents(limit=3){
+  const now = new Date();
+  const upcoming = [];
+  Object.entries(CAL.events).forEach(([key, evs])=>{
+    const [y,m,d] = key.split('-').map(Number);
+    const eventDate = new Date(y,m,d);
+    if(eventDate >= new Date(now.getFullYear(),now.getMonth(),now.getDate())){
+      evs.forEach(ev=> upcoming.push({date:eventDate, text:ev, key}));
+    }
+  });
+  upcoming.sort((a,b)=>a.date-b.date);
+  return upcoming.slice(0,limit);
+}
+function getRecentUnfinishedNotes(limit=3){
+  return NOTES.list
+    .filter(n => stripHtml(n.body||'').length > 0)
+    .slice()
+    .sort((a,b)=>b.updated-a.updated)
+    .slice(0, limit);
+}
+Apps.home = function(){
+  const body = document.createElement('div');
+  body.className = 'app-pad'; body.style.height='100%'; body.style.overflow='auto';
+
+  const ws = WORKSPACES.list[WORKSPACES.active];
+  const streak = getStreak();
+  const events = getUpcomingEvents();
+  const recentNotes = getRecentUnfinishedNotes();
+  const observations = generatePresenceObservations();
+
+  body.innerHTML = `
+    <div style="margin-bottom:22px;">
+      <div style="font-family:var(--font-display); font-size:24px; font-weight:600;">${getTimeGreeting()}.</div>
+      <div class="muted" style="font-size:13px; margin-top:2px;">Here's where things stand in your garden.</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:22px;">
+      <div class="home-stat">
+        <div class="home-stat-label">Today's focus</div>
+        <div class="home-stat-val">${ws.icon} ${ws.name}</div>
+      </div>
+      <div class="home-stat">
+        <div class="home-stat-label">Streak</div>
+        <div class="home-stat-val">🔥 ${streak} day${streak===1?'':'s'}</div>
+      </div>
+      <div class="home-stat">
+        <div class="home-stat-label">Level</div>
+        <div class="home-stat-val">🌱 ${levelFromXP(STATS.xp)}</div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:22px;">
+      <div>
+        <h4 class="home-section-h">Continue where you left off</h4>
+        <div id="homeRecentNotes"></div>
+      </div>
+      <div>
+        <h4 class="home-section-h">Upcoming events</h4>
+        <div id="homeUpcoming"></div>
+      </div>
+    </div>
+
+    <div class="home-suggest">
+      <div style="font-family:var(--font-display); font-weight:600; font-size:13px; margin-bottom:6px;">✨ Nexus Suggests</div>
+      <div class="muted" style="font-size:12.5px;" id="homeSuggestText">${observations[0]||'Open the Memory Constellation to see your files as stars.'}</div>
+    </div>
+  `;
+
+  const notesWrap = body.querySelector('#homeRecentNotes');
+  if(recentNotes.length===0){
+    notesWrap.innerHTML = `<div class="muted" style="font-size:12.5px;">No notes yet — create one to see it here.</div>`;
+  } else {
+    recentNotes.forEach(n=>{
+      const row = document.createElement('div');
+      row.className = 'list-row';
+      row.style.cursor='pointer';
+      const preview = stripHtml(n.body||'').slice(0,50);
+      row.innerHTML = `<div><div style="font-weight:600; font-size:12.5px;">📝 ${n.title||'Untitled'}</div><div class="muted" style="font-size:11px; margin-top:2px;">${preview}${preview.length>=50?'…':''}</div></div>`;
+      row.onclick = ()=>{ NOTES.activeId = n.id; openApp('notes'); };
+      notesWrap.appendChild(row);
+    });
+  }
+
+  const upcomingWrap = body.querySelector('#homeUpcoming');
+  if(events.length===0){
+    upcomingWrap.innerHTML = `<div class="muted" style="font-size:12.5px;">Nothing on the calendar yet.</div>`;
+  } else {
+    events.forEach(ev=>{
+      const row = document.createElement('div');
+      row.className = 'list-row';
+      row.style.cursor='pointer';
+      const dateStr = ev.date.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
+      row.innerHTML = `<div><div style="font-weight:600; font-size:12.5px;">📅 ${ev.text}</div><div class="muted" style="font-size:11px; margin-top:2px;">${dateStr}</div></div>`;
+      row.onclick = ()=>openApp('calendar');
+      upcomingWrap.appendChild(row);
+    });
+  }
+
+  WM.create({id:'home', title:'Home', icon:'🏠', width:640, height:560, body});
+};
+
+/* =========================================================
+   PLUGIN MARKETPLACE (apps, themes, widgets)
+   ========================================================= */
+const THEMES = {
+  nexus:    {a:'#35858E', b:'#7DA78C', c:'#F58F5C', name:'NexusOS Garden'},
+  sunset:   {a:'#F58F5C', b:'#E0795A', c:'#F2C078', name:'Sunset Clay'},
+  meadow:   {a:'#7DA78C', b:'#C2D099', c:'#35858E', name:'Meadow'},
+  lavender: {a:'#9B8FB5', b:'#C9B8DB', c:'#F58F5C', name:'Lavender Fields'},
+  ocean:    {a:'#3E7C8A', b:'#6FB3B8', c:'#F2C078', name:'Ocean Mist'},
+};
+
+/* =========================================================
+   XP / LEVEL REWARDS
+   ========================================================= */
+const UNLOCKED_REWARDS = { set: new Set((loadState()?.unlockedRewards) || ['nexus','none']) };
+const LEVEL_REWARDS = [
+  {level:1, type:'theme', key:'nexus', label:'NexusOS Garden theme'},
+  {level:2, type:'theme', key:'sunset', label:'Sunset Clay theme'},
+  {level:3, type:'theme', key:'meadow', label:'Meadow theme'},
+  {level:3, type:'wallpaper', key:'meadow', label:'Morning Meadow wallpaper'},
+  {level:4, type:'theme', key:'lavender', label:'Lavender Fields theme'},
+  {level:5, type:'command', key:'fortune', label:'"fortune" terminal command'},
+  {level:6, type:'theme', key:'ocean', label:'Ocean Mist theme'},
+  {level:7, type:'wallpaper', key:'dusk', label:'Lavender Dusk wallpaper'},
+  {level:8, type:'command', key:'matrix', label:'"matrix" terminal command'},
+  {level:9, type:'wallpaper', key:'clay', label:'Warm Clay wallpaper'},
+  {level:10, type:'command', key:'fireworks', label:'"fireworks" terminal command'},
+];
+function isRewardUnlocked(type, key){
+  if(type==='theme' && key==='nexus') return true;
+  if(type==='wallpaper' && key==='none') return true;
+  return UNLOCKED_REWARDS.set.has(type+':'+key);
+}
+function unlockReward(type, key){ UNLOCKED_REWARDS.set.add(type+':'+key); }
+function checkLevelRewards(prevLevel, newLevel){
+  if(newLevel<=prevLevel) return;
+  const newly = LEVEL_REWARDS.filter(r=>r.level>prevLevel && r.level<=newLevel);
+  newly.forEach(r=>unlockReward(r.type, r.key));
+  if(newly.length){
+    saveState();
+    setTimeout(()=>{
+      const list = newly.map(r=>'• '+r.label).join('\n');
+      toast(`🎉 Level ${newLevel}! Unlocked:\n${list}`, 7000, 'xp', [
+        {label:'See what\'s new', primary:true, onClick:()=>openApp(newly[0].type==='command' ? 'terminal' : 'settings')},
+      ]);
+      logActivity('achievement', `Reached Level ${newLevel} — unlocked ${newly.map(r=>r.label).join(', ')}`);
+    }, 600);
+  }
+}
+
+function applyTheme(key){
+  const t = THEMES[key];
+  if(!t) return;
+  document.documentElement.style.setProperty('--accent', t.a);
+  document.documentElement.style.setProperty('--accent-2', t.b);
+  document.documentElement.style.setProperty('--accent-3', t.c);
+  SETTINGS.theme = key;
+  saveState();
+}
+
+/* =========================================================
+   WALLPAPER SYSTEM
+   ========================================================= */
+const WALLPAPERS = {
+  none:    {name:'None (default)', css:''},
+  meadow:  {name:'Morning Meadow', css:'radial-gradient(ellipse at 20% 10%, rgba(194,208,153,0.5), transparent 55%), radial-gradient(ellipse at 85% 80%, rgba(53,133,142,0.18), transparent 50%), linear-gradient(160deg, #F4F5EF 0%, #E6EEC9 100%)'},
+  clay:    {name:'Warm Clay', css:'radial-gradient(ellipse at 80% 15%, rgba(245,143,92,0.30), transparent 55%), radial-gradient(ellipse at 15% 85%, rgba(125,167,140,0.20), transparent 50%), linear-gradient(160deg, #F4F5EF 0%, #EDEFE3 100%)'},
+  paper:   {name:'Linen Paper', css:'repeating-linear-gradient(135deg, rgba(53,133,142,0.025) 0px, rgba(53,133,142,0.025) 2px, transparent 2px, transparent 14px), linear-gradient(160deg, #FBFBF6 0%, #F4F5EF 100%)'},
+  dusk:    {name:'Lavender Dusk', css:'radial-gradient(ellipse at 30% 20%, rgba(155,143,181,0.25), transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(53,133,142,0.16), transparent 50%), linear-gradient(160deg, #F4F5EF 0%, #ECEAF2 100%)'},
+};
+function applyWallpaper(key, customDataUrl=null){
+  const layer = document.getElementById('wallpaper-layer');
+  if(customDataUrl){
+    layer.style.backgroundImage = `url(${customDataUrl})`;
+    SETTINGS.wallpaper = 'custom';
+    SETTINGS.wallpaperData = customDataUrl;
+  } else {
+    const wp = WALLPAPERS[key] || WALLPAPERS.none;
+    layer.style.backgroundImage = wp.css;
+    SETTINGS.wallpaper = key;
+    SETTINGS.wallpaperData = null;
+  }
+  saveState();
+}
+function loadWallpaperFromSettings(){
+  if(SETTINGS.wallpaper==='custom' && SETTINGS.wallpaperData){
+    applyWallpaper('custom', SETTINGS.wallpaperData);
+  } else {
+    applyWallpaper(SETTINGS.wallpaper || 'none');
+  }
+}
+
+/* =========================================================
+   EXPORT / IMPORT OS STATE
+   ========================================================= */
+function exportState(){
+  const data = {
+    version:4, exportedAt:new Date().toISOString(),
+    fs: FS.tree, notes: NOTES.list, events: CAL.events,
+    automations: AUTO.flows, theme: SETTINGS.theme, wallpaper: SETTINGS.wallpaper,
+    wallpaperData: SETTINGS.wallpaperData, sdkApps: SDK.apps,
+    stats: STATS, achievements: ACHIEVEMENTS.unlocked,
+    recycleBin: RECYCLE_BIN.items, tags: TAGS.list, favorites: FAVORITES.items,
+    onboardingDone: ONBOARDING.done,
+    moodboard: MOODBOARD.items, moodboardStrokes: MOODBOARD.strokes,
+    bootLogo: SETTINGS.bootLogo, bootMessage: SETTINGS.bootMessage,
+    customWidgets: CUSTOM_WIDGETS.list,
+    unlockedRewards: Array.from(UNLOCKED_REWARDS.set)
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `nexusos-backup-${Date.now()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('Exported NexusOS state to a JSON file');
+  logActivity('system', 'Exported system state');
+}
+function importState(file){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!data.fs){ toast('Invalid NexusOS backup file'); return; }
+      FS.tree = data.fs;
+      NOTES.list = data.notes || NOTES.list;
+      CAL.events = data.events || CAL.events;
+      AUTO.flows = data.automations || AUTO.flows;
+      SDK.apps = data.sdkApps || SDK.apps;
+      Object.assign(STATS, data.stats || {});
+      ACHIEVEMENTS.unlocked = data.achievements || [];
+      SETTINGS.theme = data.theme || SETTINGS.theme;
+      SETTINGS.wallpaper = data.wallpaper || 'none';
+      SETTINGS.wallpaperData = data.wallpaperData || null;
+      SETTINGS.bootLogo = data.bootLogo || null;
+      SETTINGS.bootMessage = data.bootMessage || null;
+      RECYCLE_BIN.items = data.recycleBin || [];
+      TAGS.list = data.tags || TAGS.list;
+      FAVORITES.items = data.favorites || [];
+      ONBOARDING.done = data.onboardingDone || false;
+      MOODBOARD.items = data.moodboard || [];
+      MOODBOARD.strokes = data.moodboardStrokes || [];
+      CUSTOM_WIDGETS.list = data.customWidgets || [];
+      UNLOCKED_REWARDS.set = new Set(data.unlockedRewards || ['nexus','none']);
+      saveState();
+      toast('Imported NexusOS state — reloading...');
+      logActivity('system', 'Imported system state from backup');
+      setTimeout(()=>location.reload(), 800);
+    }catch(err){
+      toast('Failed to import: '+err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+const PLUGINS = [
+  {id:'p_sunset', name:'Sunset Clay Theme', icon:'🌇', type:'theme', themeKey:'sunset', desc:'Warm terracotta and coral tones.', installed:false},
+  {id:'p_meadow', name:'Meadow Theme', icon:'🌿', type:'theme', themeKey:'meadow', desc:'Fresh greens, like a spring garden.', installed:false},
+  {id:'p_lavender', name:'Lavender Fields Theme', icon:'💜', type:'theme', themeKey:'lavender', desc:'Soft purple with coral accents.', installed:false},
+  {id:'p_ocean', name:'Ocean Mist Theme', icon:'🌊', type:'theme', themeKey:'ocean', desc:'Calm seafoam blues and sandy gold.', installed:false},
+  {id:'p_pomodoro', name:'Pomodoro Timer', icon:'⏱️', type:'app', desc:'Focus timer with work/break cycles.', installed:true},
+  {id:'p_sysmon', name:'System Monitor Widget', icon:'📈', type:'widget', desc:'Adds a live CPU/RAM widget to the desktop.', installed:true},
+  {id:'p_md', name:'Markdown Previewer', icon:'📘', type:'app', desc:'Live preview Markdown files from Notes.', installed:false},
+];
+Apps.market = function(){
+  const body = document.createElement('div');
+  body.innerHTML = `<div class="app-pad"><div class="app-h">🧩 Plugin Marketplace</div><div class="muted">Install apps, themes, and widgets. Themes apply instantly across NexusOS. Some unlock as you level up.</div></div>
+  <div class="market-grid" id="marketGrid"></div>`;
+  function render(){
+    const grid = body.querySelector('#marketGrid');
+    grid.innerHTML='';
+    PLUGINS.forEach(p=>{
+      const el = document.createElement('div');
+      el.className='plugin-card';
+      const activeTheme = p.type==='theme' && SETTINGS.theme===p.themeKey;
+      const locked = p.type==='theme' && !isRewardUnlocked('theme', p.themeKey);
+      const rewardEntry = locked ? LEVEL_REWARDS.find(r=>r.type==='theme'&&r.key===p.themeKey) : null;
+      if(locked){
+        el.style.opacity='0.55';
+        el.innerHTML = `<div class="pi">🔒</div><h5>${p.name}</h5><p>Unlocks at Level ${rewardEntry?rewardEntry.level:'?'}</p>
+          <div style="display:flex; gap:8px;"><button class="btn" disabled>Locked</button></div>`;
+        grid.appendChild(el);
+        return;
+      }
+      el.innerHTML = `<div class="pi">${p.icon}</div><h5>${p.name}${activeTheme?' ✅':''}</h5><p>${p.desc}</p>
+        <div style="display:flex; gap:8px;">
+        <button class="btn ${p.installed?'danger':'primary'}" data-action="toggle">${p.installed?'Uninstall':'Install'}</button>
+        ${p.type==='theme' ? `<button class="btn" data-action="apply" ${!p.installed?'disabled':''}>${activeTheme?'Applied':'Apply'}</button>` : ''}
+        </div>`;
+      el.querySelector('[data-action="toggle"]').onclick = ()=>{
+        p.installed = !p.installed;
+        if(p.installed){ STATS.pluginsInstalled++; awardXP(6,'Plugin installed'); checkAchievements(); }
+        toast(p.installed ? `${p.name} installed` : `${p.name} uninstalled`);
+        logActivity('plugin', `${p.installed?'Installed':'Uninstalled'} "${p.name}"`, 'market');
+        saveState(); render();
+      };
+      const applyBtn = el.querySelector('[data-action="apply"]');
+      if(applyBtn) applyBtn.onclick = ()=>{
+        applyTheme(p.themeKey);
+        toast(`Theme applied: ${p.name}`);
+        logActivity('plugin', `Applied theme "${p.name}"`, 'market');
+        render();
+      };
+      grid.appendChild(el);
+    });
+  }
+  render();
+  WM.create({id:'market', title:'Plugin Marketplace', icon:'🧩', width:720, height:500, body});
+};
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+const SETTINGS = (function(){
+  const saved = loadState() || {};
+  return {
+    theme: saved.theme || 'nexus',
+    wallpaper: saved.wallpaper || 'none',
+    wallpaperData: saved.wallpaperData || null,
+    bootLogo: saved.bootLogo || null,
+    bootMessage: saved.bootMessage || null
+  };
+})();
+Apps.settings = function(){
+  const body = document.createElement('div');
+  body.className = 'app-pad'; body.style.overflow='auto'; body.style.height='100%';
+  body.innerHTML = `
+    <div class="app-h">🛠️ Settings</div>
+    <div class="settings-section">
+      <h4>Accent Theme</h4>
+      <div class="swatch-row" id="themeRow"></div>
+    </div>
+    <div class="settings-section">
+      <h4>Wallpaper</h4>
+      <div class="swatch-row" id="wallpaperRow" style="flex-wrap:wrap; gap:10px;"></div>
+      <div style="margin-top:10px;">
+        <input type="file" id="wallpaperUpload" accept="image/*" style="display:none;">
+        <button class="btn" id="wallpaperUploadBtn">Upload custom image</button>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h4>Backup &amp; Restore</h4>
+      <div class="muted" style="margin-bottom:10px;">Export your entire NexusOS — files, notes, automations, achievements, theme — as a JSON file you can re-import later or share.</div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn primary" id="exportBtn">⬇ Export State</button>
+        <button class="btn" id="importBtn">⬆ Import State</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none;">
+      </div>
+    </div>
+    <div class="settings-section">
+      <h4>Boot Screen</h4>
+      <div class="muted" style="margin-bottom:10px;">Personalize the name and message shown when NexusOS boots up.</div>
+      <div style="display:flex; flex-direction:column; gap:8px; max-width:340px;">
+        <input id="bootLogoInput" placeholder="Logo name (e.g. NexusOS)" value="${SETTINGS.bootLogo||''}">
+        <input id="bootMessageInput" placeholder="Boot message (e.g. a workspace for growing ideas)" value="${SETTINGS.bootMessage||''}">
+        <button class="btn" id="saveBootCustom" style="align-self:flex-start;">Save Boot Screen</button>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h4>Session</h4>
+      <div class="muted" style="margin-bottom:10px;">See a recap of what you've done today before you go.</div>
+      <button class="btn primary" id="viewSummaryBtn">🌙 View Session Summary</button>
+    </div>
+    <div class="settings-section">
+      <h4>About NexusOS</h4>
+      <div class="muted">NexusOS v3.0 — a calm, AI-assisted personal workspace running entirely in your browser. All data is stored locally.</div>
+    </div>
+    <div class="settings-section">
+      <h4>Data</h4>
+      <button class="btn danger" id="resetData">Reset all data</button>
+    </div>
+  `;
+  body.querySelector('#viewSummaryBtn').onclick = showSessionSummary;
+  const row = body.querySelector('#themeRow');
+  Object.entries(THEMES).forEach(([key,val])=>{
+    const sw = document.createElement('div');
+    sw.className = 'theme-swatch' + (SETTINGS.theme===key?' active':'');
+    sw.title = val.name;
+    sw.style.background = `linear-gradient(135deg, ${val.a}, ${val.b})`;
+    sw.onclick = ()=>{
+      applyTheme(key);
+      row.querySelectorAll('.theme-swatch').forEach(s=>s.classList.remove('active'));
+      sw.classList.add('active');
+      toast('Theme updated: '+val.name);
+    };
+    row.appendChild(sw);
+  });
+
+  // wallpaper swatches
+  const wpRow = body.querySelector('#wallpaperRow');
+  Object.entries(WALLPAPERS).forEach(([key,wp])=>{
+    const locked = !isRewardUnlocked('wallpaper', key);
+    const sw = document.createElement('div');
+    sw.className = 'theme-swatch' + (SETTINGS.wallpaper===key?' active':'');
+    sw.title = locked ? `${wp.name} — unlock at Level ${LEVEL_REWARDS.find(r=>r.type==='wallpaper'&&r.key===key)?.level}` : wp.name;
+    sw.style.width='52px'; sw.style.height='38px'; sw.style.borderRadius='10px';
+    sw.style.background = wp.css || 'linear-gradient(135deg,#F4F5EF,#E6EEC9)';
+    sw.style.border = '1px solid var(--border)';
+    sw.style.position='relative';
+    if(locked){
+      sw.style.opacity='0.4'; sw.style.cursor='not-allowed';
+      sw.innerHTML = `<span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:14px;">🔒</span>`;
+      sw.onclick = ()=>{ const lvl=LEVEL_REWARDS.find(r=>r.type==='wallpaper'&&r.key===key)?.level; toast(`Reach Level ${lvl} to unlock ${wp.name}`); };
+    } else {
+      sw.onclick = ()=>{
+        applyWallpaper(key);
+        wpRow.querySelectorAll('.theme-swatch').forEach(s=>s.classList.remove('active'));
+        sw.classList.add('active');
+        toast('Wallpaper set: '+wp.name);
+        logActivity('system', `Wallpaper changed to "${wp.name}"`);
+      };
+    }
+    wpRow.appendChild(sw);
+  });
+  body.querySelector('#wallpaperUploadBtn').onclick = ()=> body.querySelector('#wallpaperUpload').click();
+  body.querySelector('#wallpaperUpload').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.size > 3*1024*1024){ toast('Please choose an image under 3MB'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      applyWallpaper('custom', ev.target.result);
+      wpRow.querySelectorAll('.theme-swatch').forEach(s=>s.classList.remove('active'));
+      toast('Custom wallpaper applied');
+      logActivity('system', 'Applied a custom wallpaper image');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  body.querySelector('#exportBtn').onclick = exportState;
+  body.querySelector('#importBtn').onclick = ()=> body.querySelector('#importFile').click();
+  body.querySelector('#importFile').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(file) importState(file);
+  });
+  body.querySelector('#saveBootCustom').onclick = ()=>{
+    const logo = body.querySelector('#bootLogoInput').value.trim();
+    const msg = body.querySelector('#bootMessageInput').value.trim();
+    SETTINGS.bootLogo = logo || null;
+    SETTINGS.bootMessage = msg || null;
+    saveState();
+    toast('Boot screen updated — you\'ll see it next time NexusOS starts');
+    logActivity('system', 'Customized the boot screen');
+  };
+
+  body.querySelector('#resetData').onclick = ()=>{
+    if(confirm('This will erase all files, notes, events, achievements and settings. Continue?')){
+      localStorage.removeItem(STORE_KEY);
+      location.reload();
+    }
+  };
+  WM.create({id:'settings', title:'Settings', icon:'🛠️', width:480, height:420, body});
+};
+
+
+/* =========================================================
+   AI CORE (assistant) with command parsing + voice
+   ========================================================= */
+Apps.assistant = function(){
+  const body = document.createElement('div');
+  body.className = 'ai-wrap';
+  body.innerHTML = `
+    <div class="ai-header">
+      <div class="ai-orb"></div>
+      <div>
+        <div style="font-family:var(--font-display); font-weight:700; font-size:13px; letter-spacing:2px;">NEXUS CORE</div>
+        <div class="muted" style="font-size:11px;">Controls files, notes, calendar, automations &amp; more</div>
+      </div>
+    </div>
+    <div class="ai-msgs" id="aiMsgs"></div>
+    <div class="ai-input-bar">
+      <input id="aiInput" placeholder='Try: "create a folder called BEEST" or "open memory constellation"'>
+      <button class="mic-btn" id="micBtn" title="Voice command">🎤</button>
+      <button class="btn primary" id="aiSend">Send</button>
+    </div>
+  `;
+  const msgs = body.querySelector('#aiMsgs');
+  function addMsg(text, who='ai'){
+    const el = document.createElement('div');
+    el.className = 'msg '+who;
+    el.textContent = text;
+    msgs.appendChild(el);
+    msgs.scrollTop = msgs.scrollHeight;
+    return el;
+  }
+  function showThinking(){
+    const el = document.createElement('div');
+    el.className = 'msg ai thinking';
+    el.innerHTML = '<span class="thinking-dot"></span><span class="thinking-dot"></span><span class="thinking-dot"></span>';
+    msgs.appendChild(el);
+    msgs.scrollTop = msgs.scrollHeight;
+    return el;
+  }
+  addMsg("I'm Nexus — your living companion in this workspace. I can open apps, manage files & notes, control automations, switch themes, and explain what's happening in the system. Try a command, or click the mic 🎤 for voice.", 'ai');
+
+  function send(){
+    const input = body.querySelector('#aiInput');
+    const text = input.value.trim();
+    if(!text) return;
+    addMsg(text, 'user');
+    input.value='';
+    STATS.aiInteractions++; checkAchievements(); saveState(); onboardingNotify('talk_to_nexus');
+    logActivity('ai', `User → AI Core: "${text}"`, 'assistant');
+    const thinkEl = showThinking();
+    setTimeout(()=>{
+      thinkEl.remove();
+      const reply = handleAICommand(text);
+      addMsg(reply, 'ai');
+      logActivity('ai', `AI Core replied`);
+    }, 500 + Math.random()*400);
+  }
+  body.querySelector('#aiSend').onclick = send;
+  body.querySelector('#aiInput').addEventListener('keydown', e=>{ if(e.key==='Enter') send(); });
+
+  // Voice
+  const micBtn = body.querySelector('#micBtn');
+  let recognizing = false;
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognizer = null;
+  if(SpeechRecognition){
+    recognizer = new SpeechRecognition();
+    recognizer.continuous = false;
+    recognizer.interimResults = false;
+    recognizer.lang = 'en-US';
+    recognizer.onresult = (e)=>{
+      const text = e.results[0][0].transcript;
+      addMsg(text, 'user');
+      STATS.aiInteractions++; checkAchievements(); saveState(); onboardingNotify('talk_to_nexus');
+      logActivity('ai', `Voice → AI Core: "${text}"`);
+      const thinkEl = showThinking();
+      setTimeout(()=>{
+        thinkEl.remove();
+        addMsg(handleAICommand(text), 'ai');
+      }, 500 + Math.random()*400);
+    };
+    recognizer.onend = ()=>{ recognizing=false; micBtn.classList.remove('listening'); };
+    recognizer.onerror = ()=>{ recognizing=false; micBtn.classList.remove('listening'); toast('Voice recognition error or permission denied'); };
+  }
+  micBtn.onclick = ()=>{
+    if(!recognizer){ toast('Voice recognition not supported in this browser'); return; }
+    if(recognizing){ recognizer.stop(); recognizing=false; micBtn.classList.remove('listening'); return; }
+    recognizing = true; micBtn.classList.add('listening');
+    recognizer.start();
+  };
+
+  WM.create({id:'assistant', title:'AI Core', icon:'✨', width:420, height:540, body});
+};
+
+/* ---------- COMMAND PARSER (AI Control Layer) ---------- */
+function handleAICommand(raw){
+  const text = raw.toLowerCase().trim();
+
+  // Open app — match by full name or id
+  for(const app of APP_REGISTRY){
+    const name = app.name.toLowerCase();
+    if(text.includes('open '+name) || text===`open ${app.id}` || text.includes('open '+app.id)){
+      openApp(app.id);
+      return `Opening ${app.name}.`;
+    }
+  }
+  if(text.includes('memory constellation') || text.includes('constellation')){ openApp('constellation'); return 'Opening Memory Constellation — visualizing your files as stars.'; }
+  if(text.includes('neural activity') || text.includes('neural graph')){ openApp('neuralgraph'); return 'Opening Neural Activity graph.'; }
+  if(text.includes('observatory') || text.includes('analytics') || text.includes('stats')){ openApp('observatory'); return 'Opening System Observatory.'; }
+  if(text.includes('achievement')){ openApp('achievements'); return 'Opening Achievements.'; }
+  if(text.includes('terminal') || text.includes('shell') || text.includes('command line')){ openApp('terminal'); return 'Opening the Terminal.'; }
+  if(text.includes('sdk') || text.includes('app store') || text.includes('build an app')){ openApp('sdk'); return 'Opening the App SDK.'; }
+  if(text.includes('task manager') || text.includes('process manager') || text.includes('processes')){ openApp('taskmgr'); return 'Opening the Process Manager.'; }
+  if(text.includes('market') || text.includes('plugin')){ openApp('market'); return 'Opening the Plugin Marketplace.'; }
+  if(text.includes('automation')){
+    // "create automation" handled below; otherwise open
+    if(!text.includes('create') && !text.includes('add') && !text.includes('new')){
+      openApp('automations'); return 'Opening Automations.';
+    }
+  }
+  if(text.includes('settings')){ openApp('settings'); return 'Opening Settings.'; }
+  if(text.includes('open file explorer') || text.includes('open files')){ openApp('explorer'); return 'Opening File Explorer.'; }
+  if(text.includes('open notes')){ openApp('notes'); return 'Opening Notes.'; }
+  if(text.includes('open calendar')){ openApp('calendar'); return 'Opening Calendar.'; }
+  if(text.includes('open code') || text.includes('code editor')){ openApp('code'); return 'Opening the Code Editor.'; }
+
+  // Switch theme: "install synthwave theme" / "apply matrix theme" / "switch to solar theme"
+  let m = text.match(/(?:install|apply|switch to|use|enable)\s+(?:the\s+)?(\w+)\s+theme/i);
+  if(m){
+    const key = m[1].toLowerCase();
+    const match = Object.entries(THEMES).find(([k,v])=> k===key || v.name.toLowerCase().includes(key));
+    if(match){
+      applyTheme(match[0]);
+      const plug = PLUGINS.find(p=>p.themeKey===match[0]);
+      if(plug && !plug.installed){ plug.installed=true; STATS.pluginsInstalled++; awardXP(6,'Plugin installed'); }
+      logActivity('plugin', `Theme switched to "${match[1].name}" via AI Core`);
+      saveState();
+      return `Theme switched to ${match[1].name}. Looks great, right?`;
+    }
+    return `I don't have a theme called "${key}". Try: sunset, meadow, lavender, ocean, or nexus.`;
+  }
+
+  // Wallpaper: "set wallpaper to meadow" / "change wallpaper to clay"
+  m = text.match(/(?:set|change|apply)\s+(?:the\s+)?wallpaper\s+(?:to|as)?\s*["']?([\w ]+)["']?/i);
+  if(m){
+    const key = m[1].trim().toLowerCase().replace(/\s+/g,'');
+    const match = Object.entries(WALLPAPERS).find(([k,v])=> k===key || v.name.toLowerCase().replace(/\s+/g,'').includes(key));
+    if(match){
+      applyWallpaper(match[0]);
+      return `Wallpaper changed to ${match[1].name}.`;
+    }
+    return `I don't have a wallpaper called "${m[1].trim()}". Try: meadow, clay, paper, dusk, or none. You can also upload your own in Settings.`;
+  }
+
+  // Export/import
+  if(text.includes('export') && (text.includes('state')||text.includes('backup')||text.includes('data'))){
+    exportState();
+    return `Exporting your NexusOS state as a JSON file now.`;
+  }
+  if(text.includes('import') && (text.includes('state')||text.includes('backup')||text.includes('data'))){
+    openApp('settings');
+    return `Open Settings → Backup & Restore to import a NexusOS backup file.`;
+  }
+
+  // Switch workspace
+  m = text.match(/(?:switch to|go to|open)\s+(?:the\s+)?(\w+)\s+(?:workspace|desktop)/i);
+  if(m){
+    const name = m[1].toLowerCase();
+    const ws = WORKSPACES.list.find(w=>w.name.toLowerCase()===name);
+    if(ws){ WORKSPACES.switchTo(ws.id); return `Switched to the ${ws.name} workspace.`; }
+    return `I don't see a workspace called "${name}". Available: ${WORKSPACES.list.map(w=>w.name).join(', ')}.`;
+  }
+
+  // Create note: "create a note called X"
+  m = text.match(/(?:create|make|new)\s+(?:a\s+)?note\s+(?:called|titled|named)?\s*["']?([^"'\n]+)["']?$/i)
+       || text.match(/note:\s*(.+)/i);
+  if(m){
+    const title = m[1].trim();
+    const n = {id:'n'+Date.now(), title: title.replace(/^\w/, c=>c.toUpperCase()), body:'', updated:Date.now(), created:Date.now(), tags:[]};
+    NOTES.list.push(n); NOTES.activeId = n.id;
+    STATS.notesCreated++; awardXP(4,'Note created');
+    runAutomationsFor('note_created');
+    saveState();
+    openApp('notes');
+    return `Created a new note titled "${n.title}" and opened it in Notes.`;
+  }
+
+  // Create folder
+  m = text.match(/(?:create|make)\s+(?:a\s+)?(?:new\s+)?folder\s+(?:called|named)?\s*["']?([\w.\- ]+)["']?/i);
+  if(m){
+    const name = m[1].trim();
+    if(FS.createFolder([], name)){
+      openApp('explorer');
+      runAutomationsFor('file_created');
+      return `Folder "${name}" created. Check the Memory Constellation — it's already a new star.`;
+    }
+    return `A folder named "${name}" already exists.`;
+  }
+
+  // Create file
+  m = text.match(/create\s+(?:a\s+)?(?:new\s+)?file\s+(?:called|named)?\s*["']?([\w.\-]+)["']?/i);
+  if(m){
+    const name = m[1];
+    const ext = name.includes('.') ? name.split('.').pop() : 'txt';
+    if(FS.createFile([], name, '', ext)){
+      openApp('explorer');
+      runAutomationsFor('file_created');
+      return `Created "${name}" in Home and opened File Explorer.`;
+    }
+    return `A file named "${name}" already exists in Home.`;
+  }
+
+  // List files
+  if(text.includes('list my files') || text.includes('list files') || text.includes('what files')){
+    const folder = FS.getFolder([]);
+    const names = folder.children.map(c=> (c.type==='folder'?'📁 ':'📄 ')+c.name).join(', ');
+    return `In Home: ${names || '(empty)'}`;
+  }
+
+  // Search files
+  m = text.match(/(?:find|search)(?:\s+for)?\s+(.+)/i);
+  if(m){
+    const results = FS.search(m[1].trim());
+    if(results.length===0) return `No files or folders matching "${m[1].trim()}" found.`;
+    openApp('explorer');
+    return `Found ${results.length} match(es): ` + results.slice(0,5).map(r=>r.item.name).join(', ');
+  }
+
+  // Add calendar event
+  m = text.match(/(?:add|create|schedule)\s+(?:an?\s+)?event\s*[:\-]?\s*(.+?)(?:\s+(?:today|for today))?$/i);
+  if(m){
+    const today = new Date();
+    const key = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+    CAL.events[key] = CAL.events[key]||[];
+    CAL.events[key].push(m[1].trim());
+    runAutomationsFor('calendar_event_added', {text:m[1].trim()});
+    saveState(); openApp('calendar');
+    return `Added "${m[1].trim()}" to today's calendar.`;
+  }
+
+  // Create automation: "create an automation when X then Y" — simplified toggle
+  if(text.includes('automation') && (text.includes('create')||text.includes('add')||text.includes('new'))){
+    AUTO.flows.push({id:'a'+Date.now(), triggerType:'note_created', trigger:'When a new note is created', actionType:'notify', action:'Show a notification', on:true});
+    STATS.automationsCreated++; awardXP(8,'Automation created');
+    saveState();
+    openApp('automations');
+    return `Created a new automation (New note created → Show a notification). Open Automations to customize it.`;
+  }
+
+  // Explain system activity
+  if(text.includes('what') && (text.includes('happening') || text.includes('activity') || text.includes('going on'))){
+    const recent = ACTIVITY.log.slice(0,5).map(a=>'• '+a.text).join('\n');
+    return `Here's recent system activity:\n${recent || '(nothing yet)'}\nOpen Neural Activity for a live view.`;
+  }
+
+  // AI Presence: "how am I doing" / "what have you noticed" / "tell me about myself"
+  if((text.includes('how am i') || text.includes('notice') || text.includes('about me') || text.includes('about myself'))){
+    const obs = generatePresenceObservations();
+    return obs.slice(0,3).map(o=>'• '+o).join('\n');
+  }
+
+  // Dream mode
+  if(text.includes('dream mode') || text.includes('screensaver')){
+    enterDreamMode();
+    return `Entering Dream Mode — move your mouse or click anywhere to wake up.`;
+  }
+
+  // Demo / tour
+  if(text.includes('demo') || text.includes('tour') || text.includes('show me around')){
+    startDemoMode();
+    return `Starting the guided tour — I'll walk you through everything.`;
+  }
+
+  // Session summary
+  if(text.includes('session summary') || text.includes('end session') || (text.includes('summary') && text.includes('today'))){
+    showSessionSummary();
+    return `Here's how today went.`;
+  }
+
+  // Home
+  if(text.includes('go home') || text==='home' || text.includes('open home')){
+    openApp('home');
+    return `Here's your home screen.`;
+  }
+
+  // Legacy tree
+  if(text.includes('legacy tree') || text.includes('my tree')){
+    openApp('legacytree');
+    return `Opening your Legacy Tree — it grows with everything you build here.`;
+  }
+
+  // Undo / redo
+  if(/\bundo\b/.test(text)){
+    undo();
+    return HISTORY.redoStack.length ? `Undid: ${HISTORY.redoStack[HISTORY.redoStack.length-1].label}` : `There was nothing to undo.`;
+  }
+  if(/\bredo\b/.test(text)){
+    redo();
+    return HISTORY.undoStack.length ? `Redid: ${HISTORY.undoStack[HISTORY.undoStack.length-1].label}` : `There was nothing to redo.`;
+  }
+
+  // Favorites
+  if(text.includes('favorite') || text.includes('favourites') || text.includes('starred')){
+    openApp('favorites');
+    if(FAVORITES.items.length===0) return `Opening Favorites — nothing starred yet. Star a note, file, folder, or calendar event and it'll show up here.`;
+    const list = FAVORITES.items.slice(0,5).map(f=>'• '+f.label).join('\n');
+    return `Opening Favorites. Here's what you've starred:\n${list}`;
+  }
+
+  // Tags — "show me everything tagged school" / "what's tagged coding"
+  m = text.match(/(?:tagged|tag)\s*#?([\w\-]+)/i);
+  if(m){
+    const tag = normalizeTag(m[1]);
+    const matches = findByTag(tag);
+    showTagResults(tag);
+    return matches.length
+      ? `Opening everything tagged ${tag} — ${matches.length} item${matches.length===1?'':'s'}.`
+      : `Nothing is tagged ${tag} yet. Add it via right-click → Add tag, or the + tag button in Notes.`;
+  }
+
+  // Timeline
+  if(text.includes('timeline') || text.includes('history')){
+    openApp('timeline');
+    return `Opening your Timeline — every memory NexusOS has recorded.`;
+  }
+
+  // Recycle bin
+  if(text.includes('recycle') || text.includes('trash') || text.includes('bin')){
+    openApp('recyclebin');
+    return RECYCLE_BIN.items.length
+      ? `Opening the Recycle Bin — ${RECYCLE_BIN.items.length} item${RECYCLE_BIN.items.length===1?'':'s'} resting there.`
+      : `Opening the Recycle Bin — it's empty right now.`;
+  }
+
+  // Profile / traits
+  if(text.includes('profile') || text.includes('my traits') || text.includes('who am i')){
+    openApp('profile');
+    const traits = getActiveTraits();
+    return traits.length
+      ? `Opening your Profile. Right now you're: ${traits.map(t=>t.icon+' '+t.name).join(', ')}.`
+      : `Opening your Profile — traits will appear as patterns emerge.`;
+  }
+
+  // Weekly insights
+  if(text.includes('insight') || text.includes('weekly summary') || text.includes('this week')){
+    openApp('insights');
+    return `Opening Weekly Insights — a look back at the last 7 days.`;
+  }
+
+  // Greeting / help
+  if(/^(hi|hello|hey|yo)\b/.test(text)){
+    return "Hello! I can open apps, create notes/files/folders, manage automations, switch themes, switch workspaces, and explain system activity. Try \"help\" for a full list.";
+  }
+  if(text.includes('help') || text.includes('what can you do')){
+    return `I can:
+• Open any app — "open terminal", "open memory constellation", "open observatory"
+• Create things — "create a folder called BEEST", "create a note called Homework"
+• Search — "find welcome" (searches files, notes, calendar, automations, tags, timeline)
+• Calendar — "add event Team meeting"
+• Automations — "create an automation"
+• Themes — "install sunset theme"
+• Wallpapers — "set wallpaper to meadow"
+• Workspaces — "switch to coding workspace"
+• Backups — "export my state"
+• Favorites — "show my favorites"
+• Tags — "show me everything tagged school"
+• "my profile" — your traits and stats
+• "this week" — weekly insights
+• "recycle bin" — restore deleted items
+• "how am I doing" — what I've noticed about your session
+• "dream mode" — ambient screensaver
+• "my tree" — your Legacy Tree
+• "go home" — your home screen
+• "session summary" — a recap of today
+• "take a tour" / "demo" — guided walkthrough
+• "what's happening" — recent system activity
+Ctrl+Z / Ctrl+Shift+Z undo and redo your last 30 actions in Files, Notes, and Moodboard. Right-click the desktop for quick actions. Drag files between folders, drag windows to screen edges to snap, and click stars in the Memory Constellation to open them. Voice commands work too — click 🎤!`;
+  }
+  return `I didn't quite catch that as a command. Try "help" to see what I can do, or use the Command Palette (Ctrl+K).`;
+}
+
+/* =========================================================
+   COMMAND PALETTE (Ctrl+K)
+   ========================================================= */
+const CMDK = { selected: 0, results: [] };
+function buildCmdkResults(query){
+  const q = query.toLowerCase().trim();
+  const results = [];
+  // apps
+  APP_REGISTRY.forEach(app=>{
+    if(!q || app.name.toLowerCase().includes(q)){
+      results.push({icon:app.icon, label:'Open '+app.name, meta:'App', action:()=>openApp(app.id)});
+    }
+  });
+  // workspaces
+  WORKSPACES.list.forEach(ws=>{
+    if(!q || ws.name.toLowerCase().includes(q)){
+      results.push({icon:ws.icon, label:'Switch to '+ws.name+' workspace', meta:'Workspace', action:()=>WORKSPACES.switchTo(ws.id)});
+    }
+  });
+  // themes
+  Object.entries(THEMES).forEach(([key,t])=>{
+    if(!q || t.name.toLowerCase().includes(q) || 'theme'.includes(q)){
+      results.push({icon:'🎨', label:'Apply theme: '+t.name, meta:'Theme', action:()=>{applyTheme(key); toast('Theme applied: '+t.name);}});
+    }
+  });
+  // wallpapers
+  Object.entries(WALLPAPERS).forEach(([key,wp])=>{
+    if(!q || wp.name.toLowerCase().includes(q) || 'wallpaper'.includes(q)){
+      results.push({icon:'🖼️', label:'Set wallpaper: '+wp.name, meta:'Wallpaper', action:()=>{applyWallpaper(key); toast('Wallpaper set: '+wp.name);}});
+    }
+  });
+  // export/import
+  if(!q || 'export backup'.includes(q) || q.includes('export')){
+    results.push({icon:'⬇️', label:'Export NexusOS state', meta:'Backup', action:exportState});
+  }
+  if(!q || 'import backup restore'.includes(q) || q.includes('import')){
+    results.push({icon:'⬆️', label:'Import NexusOS state', meta:'Backup', action:()=>openApp('settings')});
+  }
+  // undo/redo
+  if(!q || 'undo'.includes(q)){
+    results.push({icon:'↩️', label: HISTORY.undoStack.length ? `Undo: ${HISTORY.undoStack[HISTORY.undoStack.length-1].label}` : 'Undo (nothing to undo)', meta:'History', action:undo});
+  }
+  if(!q || 'redo'.includes(q)){
+    results.push({icon:'↪️', label: HISTORY.redoStack.length ? `Redo: ${HISTORY.redoStack[HISTORY.redoStack.length-1].label}` : 'Redo (nothing to redo)', meta:'History', action:redo});
+  }
+  if(!q || 'demo tour'.includes(q)){
+    results.push({icon:'▶️', label:'Start guided demo tour', meta:'Demo', action:startDemoMode});
+  }
+  if(!q || 'session summary end'.includes(q)){
+    results.push({icon:'🌙', label:'View session summary', meta:'Session', action:showSessionSummary});
+  }
+
+  // ===== GLOBAL SEARCH =====
+  if(q.length>=2){
+    // files & folders (name + content)
+    FS.flatten().forEach(f=>{
+      const nameMatch = f.item.name.toLowerCase().includes(q);
+      const contentMatch = f.item.type==='file' && (f.item.content||'').toLowerCase().includes(q);
+      if(nameMatch || contentMatch){
+        results.push({
+          icon: f.item.type==='folder' ? '📁' : iconForExt(f.item.ext),
+          label: f.item.name + (contentMatch && !nameMatch ? ' (match in content)' : ''),
+          meta: f.item.type==='folder' ? 'Folder' : 'File',
+          action: ()=>{
+            if(f.item.type==='folder'){ openApp('explorer'); }
+            else openFileInEditor(f.path, f.item);
+          }
+        });
+      }
+    });
+    // notes (title + body)
+    NOTES.list.forEach(n=>{
+      if((n.title||'').toLowerCase().includes(q) || stripHtml(n.body||'').toLowerCase().includes(q)){
+        results.push({icon:'📝', label:n.title||'Untitled', meta:'Note', action:()=>{ NOTES.activeId=n.id; openApp('notes'); }});
+      }
+    });
+    // calendar events
+    Object.entries(CAL.events).forEach(([key, evs])=>{
+      evs.forEach(ev=>{
+        if(ev.toLowerCase().includes(q)){
+          results.push({icon:'📅', label:ev, meta:'Calendar', action:()=>openApp('calendar')});
+        }
+      });
+    });
+    // automations
+    AUTO.flows.forEach(f=>{
+      if(f.trigger.toLowerCase().includes(q) || f.action.toLowerCase().includes(q)){
+        results.push({icon:'⚡', label:`${f.trigger} → ${f.action}`, meta:'Automation', action:()=>openApp('automations')});
+      }
+    });
+    // tags
+    TAGS.list.forEach(tag=>{
+      if(tag.toLowerCase().includes(q)){
+        results.push({icon:'🏷️', label:`Find everything tagged ${tag}`, meta:'Tag', action:()=>showTagResults(tag)});
+      }
+    });
+    // timeline entries
+    ACTIVITY.log.slice(0,100).forEach(a=>{
+      if(a.text.toLowerCase().includes(q)){
+        results.push({icon:TIMELINE_ICONS[a.kind]||'•', label:a.text, meta:'Timeline', action:()=>openApp('timeline')});
+      }
+    });
+  }
+
+  // if query looks like a command, offer to send to AI
+  if(q.length>2){
+    results.push({icon:'✨', label:`Ask Nexus: "${query}"`, meta:'AI Core', action:()=>{
+      openApp('assistant');
+      setTimeout(()=>{
+        const input = document.querySelector('#aiInput');
+        if(input){ input.value = query; document.querySelector('#aiSend').click(); }
+      }, 150);
+    }});
+  }
+  return results.slice(0,12);
+}
+
+/* ---------- TAG RESULTS WINDOW ---------- */
+function showTagResults(tag){
+  const matches = findByTag(tag);
+  const body = document.createElement('div');
+  body.className = 'app-pad'; body.style.height='100%'; body.style.overflow='auto';
+  const col = colorForTag(tag);
+  body.innerHTML = `<div class="app-h">${tag}</div><div class="muted" style="margin-bottom:14px;">${matches.length} item${matches.length===1?'':'s'} tagged ${tag}</div><div id="tagResultsList"></div>`;
+  const list = body.querySelector('#tagResultsList');
+  if(matches.length===0){ list.innerHTML='<div class="muted">Nothing tagged yet.</div>'; }
+  matches.forEach(m=>{
+    const row = document.createElement('div');
+    row.className='list-row'; row.style.cursor='pointer';
+    const icon = m.type==='note' ? '📝' : (m.type==='folder' ? '📁' : iconForExt(m.ref.ext));
+    const label = m.ref.title || m.ref.name || 'Untitled';
+    row.innerHTML = `<span>${icon} ${label}</span>`;
+    row.onclick = ()=>{
+      if(m.type==='note'){ NOTES.activeId=m.ref.id; openApp('notes'); }
+      else if(m.type==='folder'){ openApp('explorer'); }
+      else { openFileInEditor(m.path, m.ref); }
+    };
+    list.appendChild(row);
+  });
+  WM.create({id:'tagresults-'+tag.replace('#',''), title:tag, icon:'🏷️', width:480, height:440, body});
+}
+function renderCmdk(){
+  const wrap = document.getElementById('cmdk-results');
+  wrap.innerHTML='';
+  CMDK.results.forEach((r,i)=>{
+    const el = document.createElement('div');
+    el.className = 'cmdk-item'+(i===CMDK.selected?' sel':'');
+    el.innerHTML = `<span class="ic">${r.icon}</span><span>${r.label}</span><span class="meta">${r.meta}</span>`;
+    el.onclick = ()=>{ r.action(); closeCmdk(); };
+    wrap.appendChild(el);
+  });
+}
+function openCmdk(){
+  document.getElementById('cmdk-overlay').classList.add('show');
+  const input = document.getElementById('cmdk-input');
+  input.value=''; input.focus();
+  CMDK.results = buildCmdkResults('');
+  CMDK.selected = 0;
+  renderCmdk();
+}
+function closeCmdk(){ document.getElementById('cmdk-overlay').classList.remove('show'); }
+document.getElementById('cmdkOpenBtn').onclick = openCmdk;
+document.getElementById('cmdk-overlay').addEventListener('click', e=>{ if(e.target.id==='cmdk-overlay') closeCmdk(); });
+document.getElementById('cmdk-input').addEventListener('input', e=>{
+  CMDK.results = buildCmdkResults(e.target.value);
+  CMDK.selected = 0;
+  renderCmdk();
+});
+document.getElementById('cmdk-input').addEventListener('keydown', e=>{
+  if(e.key==='ArrowDown'){ e.preventDefault(); CMDK.selected = Math.min(CMDK.results.length-1, CMDK.selected+1); renderCmdk(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); CMDK.selected = Math.max(0, CMDK.selected-1); renderCmdk(); }
+  else if(e.key==='Enter'){ const r = CMDK.results[CMDK.selected]; if(r){ r.action(); closeCmdk(); } }
+  else if(e.key==='Escape'){ closeCmdk(); }
+});
+document.addEventListener('keydown', e=>{
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); openCmdk(); }
+});
+
+/* ---------- NOTIFICATION PANEL TOGGLE ---------- */
+document.getElementById('notifBtn').onclick = ()=>{
+  document.getElementById('notif-panel').classList.toggle('show');
+};
+
+/* ---------- AMBIENT SOUND (Web Audio synth hum) ---------- */
+const AMBIENT = { on:false, ctx:null, nodes:[] };
+function toggleAmbient(){
+  const btn = document.getElementById('soundBtn');
+  if(!AMBIENT.on){
+    try{
+      AMBIENT.ctx = AMBIENT.ctx || new (window.AudioContext||window.webkitAudioContext)();
+      const ctx = AMBIENT.ctx;
+      const osc1 = ctx.createOscillator(); osc1.type='sine'; osc1.frequency.value=110;
+      const osc2 = ctx.createOscillator(); osc2.type='sine'; osc2.frequency.value=165;
+      const gain = ctx.createGain(); gain.gain.value=0.025;
+      osc1.connect(gain); osc2.connect(gain); gain.connect(ctx.destination);
+      osc1.start(); osc2.start();
+      AMBIENT.nodes = [osc1,osc2,gain];
+      AMBIENT.on = true;
+      btn.textContent = '🔊';
+      toast('Ambient hum enabled');
+    }catch(e){ toast('Audio not available in this browser'); }
+  } else {
+    AMBIENT.nodes.forEach(n=> n.stop ? n.stop() : null);
+    AMBIENT.ctx.close(); AMBIENT.ctx=null;
+    AMBIENT.on = false;
+    btn.textContent = '🔈';
+    toast('Ambient hum disabled');
+  }
+}
+document.getElementById('soundBtn').onclick = toggleAmbient;
+
+/* =========================================================
+   WIDGET RAIL (desktop widgets)
+   ========================================================= */
+function buildWidgetRail(){
+  const rail = document.getElementById('widget-rail');
+  rail.innerHTML = `
+    ${!ONBOARDING.done ? `
+    <div class="widget" id="w-onboarding">
+      <h4>🌱 Getting Started</h4>
+      <div id="onboardSteps"></div>
+    </div>` : ''}
+    <div class="widget" id="w-clock">
+      <h4>Local Time</h4>
+      <div class="big" id="wClockTime">--:--:--</div>
+      <div class="muted" id="wClockDate">--</div>
+    </div>
+    <div class="widget" id="w-sys">
+      <h4>System Pulse</h4>
+      <div class="pulse-bars" id="wPulse"></div>
+    </div>
+    <div class="widget" id="w-quote">
+      <h4>Nexus Suggests</h4>
+      <div class="quote-text" id="wQuote">Loading...</div>
+    </div>
+    <div class="widget" id="w-xp">
+      <h4>Progress</h4>
+      <div class="muted">Level ${levelFromXP(STATS.xp)} · ${STATS.xp} XP</div>
+      <div style="height:6px; border-radius:4px; background:rgba(255,255,255,0.06); overflow:hidden; margin-top:8px;">
+        <div id="wXpFill" style="height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); width:${STATS.xp%100}%;"></div>
+      </div>
+    </div>
+    <div id="customWidgetsSlot"></div>
+  `;
+  // clock
+  function tick(){
+    const n = new Date();
+    document.getElementById('wClockTime').textContent = n.toLocaleTimeString();
+    document.getElementById('wClockDate').textContent = n.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'});
+  }
+  tick(); setInterval(tick,1000);
+  // pulse bars
+  const pulse = document.getElementById('wPulse');
+  for(let i=0;i<24;i++){ const d=document.createElement('div'); d.style.height='10%'; pulse.appendChild(d); }
+  setInterval(()=>{
+    pulse.querySelectorAll('div').forEach(d=>{ d.style.height = (8+Math.random()*92)+'%'; });
+  }, 700);
+  // suggestions + AI presence observations
+  const suggestions = [
+    'Try saying "create a folder called BEEST" to the AI Core.',
+    'Open the Memory Constellation to see your files as stars — click one to open it.',
+    'Press Ctrl+K anytime for the Command Palette.',
+    'Install the Sunset Clay theme from the Plugin Marketplace.',
+    'Switch workspaces with Ctrl+1, Ctrl+2, Ctrl+3.',
+    'Open Neural Activity to watch the system think in real time.',
+    'Run "neofetch" in the Terminal for a system summary.',
+    'Build your own mini-app in the App SDK.',
+    'Drag files between folders in the File Explorer.',
+    'Try a custom wallpaper in Settings.',
+    'Export your whole workspace as a backup file in Settings.',
+    'Drag a window to a screen edge to snap it.',
+  ];
+  let qi=0;
+  function rotateQuote(){
+    // every 3rd rotation, show an AI presence observation instead
+    if(qi%3===2){
+      const obs = generatePresenceObservations();
+      document.getElementById('wQuote').textContent = '👁️ ' + obs[Math.floor(Math.random()*obs.length)];
+    } else {
+      document.getElementById('wQuote').textContent = suggestions[qi%suggestions.length];
+    }
+    qi++;
+  }
+  rotateQuote();
+  setInterval(rotateQuote, 7000);
+  renderCustomWidgets();
+}
+function renderCustomWidgets(){
+  const slot = document.getElementById('customWidgetsSlot');
+  if(!slot) return;
+  slot.innerHTML='';
+  CUSTOM_WIDGETS.list.forEach(cw=>{
+    const div = document.createElement('div');
+    div.className = 'widget custom-widget';
+    div.innerHTML = `<h4>${cw.icon} ${cw.name}</h4><div class="cw-body"></div>`;
+    slot.appendChild(div);
+    const cwBody = div.querySelector('.cw-body');
+    try{
+      const helpers = {
+        toast, openApp, FS, NOTES, CAL,
+        container: cwBody,
+        setText: (t)=>{ cwBody.textContent = t; },
+        setHTML: (h)=>{ cwBody.innerHTML = h; },
+      };
+      const fn = new Function('helpers', 'container', `with(helpers){\n${cw.code}\n}`);
+      fn(helpers, cwBody);
+    }catch(e){
+      cwBody.innerHTML = `<div class="muted" style="color:var(--danger);">Widget error: ${e.message}</div>`;
+    }
+  });
+}
+// refresh XP widget whenever XP changes
+const _origUpdateXPBar = updateXPBar;
+updateXPBar = function(){
+  _origUpdateXPBar();
+  const fill = document.getElementById('wXpFill');
+  if(fill) fill.style.width = (STATS.xp%100)+'%';
+  const widget = document.querySelector('#w-xp .muted');
+  if(widget) widget.textContent = `Level ${levelFromXP(STATS.xp)} · ${STATS.xp} XP`;
+};
+
+/* =========================================================
+   BOOTSTRAP
+   ========================================================= */
+/* =========================================================
+   INTERACTIVE ONBOARDING
+   ========================================================= */
+const ONBOARDING_STEPS = [
+  {id:'create_note', label:'Create your first note', hint:'Click + New Note in Notes, or tell Nexus: "create a note called Hello"'},
+  {id:'open_constellation', label:'Open Memory Constellation', hint:'Find the 🌌 Memory Constellation in the orbital dock'},
+  {id:'create_folder', label:'Create your first folder', hint:'In File Explorer, click + Folder — or ask Nexus to make one'},
+  {id:'talk_to_nexus', label:'Talk to Nexus', hint:'Type or say anything to the AI Core'},
+  {id:'unlock_achievement', label:'Unlock your first achievement', hint:'Most of the steps above will trigger one automatically'},
+];
+function onboardingNotify(eventId){
+  if(ONBOARDING.done) return;
+  const stepIndex = ONBOARDING_STEPS.findIndex(s=>s.id===eventId);
+  if(stepIndex<0 || stepIndex < ONBOARDING.step) return; // already passed or unknown
+  if(stepIndex !== ONBOARDING.step) return; // must complete in order (except achievement which can lag)
+  ONBOARDING.step++;
+  saveState();
+  renderOnboardingWidget();
+  if(ONBOARDING.step >= ONBOARDING_STEPS.length){
+    completeOnboarding();
+  } else {
+    toast(`✓ ${ONBOARDING_STEPS[stepIndex].label}`);
+  }
+}
+function completeOnboarding(){
+  ONBOARDING.done = true;
+  saveState();
+  renderOnboardingWidget();
+  setTimeout(()=>{
+    toast('🌱 Welcome home.', 5000, 'xp');
+    logActivity('system', 'Completed onboarding — welcome home.');
+    awardXP(15, 'Onboarding complete');
+  }, 400);
+}
+function renderOnboardingWidget(){
+  const widget = document.getElementById('w-onboarding');
+  if(!widget) return;
+  if(ONBOARDING.done){ widget.remove(); return; }
+  const list = widget.querySelector('#onboardSteps');
+  list.innerHTML = ONBOARDING_STEPS.map((s,i)=>{
+    const done = i < ONBOARDING.step;
+    const current = i === ONBOARDING.step;
+    return `<div style="display:flex; align-items:flex-start; gap:8px; padding:5px 0; ${current?'':''}">
+      <span style="font-size:13px; line-height:1.4;">${done?'✅':(current?'🌱':'⚪')}</span>
+      <div>
+        <div style="font-size:12px; ${done?'color:var(--text-low); text-decoration:line-through;':'color:var(--text-hi); font-weight:600;'}">${s.label}</div>
+        ${current?`<div class="muted" style="font-size:11px; margin-top:2px;">${s.hint}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function maybeStartOnboarding(){
+  if(ONBOARDING.done) return;
+  setTimeout(()=>{
+    openApp('assistant');
+    setTimeout(()=>{
+      const msgs = document.getElementById('aiMsgs');
+      if(!msgs) return;
+      const intro = document.createElement('div');
+      intro.className = 'msg ai';
+      intro.textContent = `Welcome to NexusOS — I'm Nexus. Let's take 45 seconds to get you settled. I've added a small checklist to your desktop. First: ${ONBOARDING_STEPS[0].hint}`;
+      msgs.appendChild(intro);
+      msgs.scrollTop = msgs.scrollHeight;
+    }, 300);
+  }, 1200);
+}
+
+/* =========================================================
+   DEMO MODE — guided 2-minute tour
+   Each step performs a real action in the OS (not simulated), then
+   waits for the presenter to click Next. Skippable at any point.
+   ========================================================= */
+const DEMO_STEPS = [
+  {
+    icon:'🌱', title:'Welcome to NexusOS',
+    body:'A living workspace where your files, notes, and ideas grow and connect. Let\'s take a 2-minute look around.',
+    run: ()=>{ Object.keys(WM.windows).forEach(id=>WM.close(id)); }
+  },
+  {
+    icon:'📝', title:'1. Create a note',
+    body:'Notes grow like plants — a fresh note is a seedling 🌱, and it blooms 🌸 the more you write.',
+    run: ()=>{
+      openApp('notes');
+      return delay(500).then(()=>{
+        const n = {id:'demo_note_'+Date.now(), title:'Physics Homework', body:'Chapter 4: momentum and collisions.<br><br>Remember to review the practice set before Friday.', updated:Date.now(), created:Date.now(), tags:[]};
+        NOTES.list.push(n); NOTES.activeId = n.id;
+        saveState();
+        openApp('notes');
+      });
+    }
+  },
+  {
+    icon:'🌌', title:'2. Open Memory Constellation',
+    body:'Every file and note becomes a star — color-coded, drifting, connected by shared topics. Click any star to open it.',
+    run: ()=>{ Object.keys(WM.windows).forEach(id=>WM.close(id)); return delay(300).then(()=>openApp('constellation')); }
+  },
+  {
+    icon:'✨', title:'3. Talk to Nexus',
+    body:'The AI Core understands natural language — it can create things, open apps, and explain what\'s happening in the system.',
+    run: ()=>{
+      Object.keys(WM.windows).forEach(id=>WM.close(id));
+      return delay(300).then(()=>{
+        openApp('assistant');
+        return delay(400).then(()=>{
+          const input = document.getElementById('aiInput');
+          const sendBtn = document.getElementById('aiSend');
+          if(!input || !sendBtn) return;
+          input.value = 'create a folder called Demo Project';
+          // drive the real send button so this counts identically to genuine usage
+          // (AI interaction stats, activity log, achievements, onboarding all fire normally)
+          sendBtn.click();
+          return delay(900); // let the real thinking animation + reply play out
+        });
+      });
+    }
+  },
+  {
+    icon:'⚡', title:'4. Automations',
+    body:'Set up triggers and actions once, and NexusOS handles the rest — like getting notified whenever a new file appears.',
+    run: ()=>{ Object.keys(WM.windows).forEach(id=>WM.close(id)); return delay(300).then(()=>openApp('automations')); }
+  },
+  {
+    icon:'📜', title:'5. Timeline',
+    body:'Everything you do is remembered — searchable, filterable, and grouped by day.',
+    run: ()=>{ Object.keys(WM.windows).forEach(id=>WM.close(id)); return delay(300).then(()=>openApp('timeline')); }
+  },
+  {
+    icon:'🪐', title:'6. Switch workspace',
+    body:'Three workspaces — School, Coding, Creative — each with their own set of open windows.',
+    run: ()=>{ Object.keys(WM.windows).forEach(id=>WM.close(id)); return delay(300).then(()=>WORKSPACES.switchTo(1)); }
+  },
+  {
+    icon:'🎉', title:'That\'s NexusOS',
+    body:'Explore the orbital dock for everything else — Moodboard, Widget Creator, the Legacy Tree, and more. Thanks for taking the tour.',
+    run: ()=>{ WORKSPACES.switchTo(0); Object.keys(WM.windows).forEach(id=>WM.close(id)); }
+  }
+];
+const DEMO = { active:false, stepIndex:0, running:false };
+function delay(ms){ return new Promise(res=>setTimeout(res, ms)); }
+
+function renderDemoProgress(){
+  const wrap = document.getElementById('demoProgress');
+  wrap.innerHTML = DEMO_STEPS.map((s,i)=>{
+    const cls = i<DEMO.stepIndex ? 'done' : (i===DEMO.stepIndex ? 'active' : '');
+    return `<div class="dot ${cls}"></div>`;
+  }).join('');
+}
+async function showDemoStep(index){
+  if(DEMO.running) return;
+  DEMO.running = true;
+  DEMO.stepIndex = index;
+  const step = DEMO_STEPS[index];
+  document.getElementById('demoStepIcon').textContent = step.icon;
+  document.getElementById('demoStepTitle').textContent = step.title;
+  document.getElementById('demoStepBody').textContent = step.body;
+  document.getElementById('demoNext').textContent = index===0 ? 'Start →' : (index===DEMO_STEPS.length-1 ? 'Finish' : 'Next →');
+  renderDemoProgress();
+  try{ await step.run(); }catch(e){ /* demo actions are non-critical; never block the tour on an error */ }
+  DEMO.running = false;
+}
+function startDemoMode(){
+  if(DEMO.active) return;
+  DEMO.active = true;
+  document.getElementById('demo-backdrop').classList.add('show');
+  document.getElementById('demo-card').classList.add('show');
+  if(FOCUS.active) exitFocusMode();
+  exitDreamMode();
+  logActivity('system', 'Started the guided demo tour');
+  showDemoStep(0);
+}
+function exitDemoMode(){
+  DEMO.active = false;
+  document.getElementById('demo-backdrop').classList.remove('show');
+  document.getElementById('demo-card').classList.remove('show');
+}
+document.getElementById('demoBtn').onclick = startDemoMode;
+document.getElementById('demoSkip').onclick = exitDemoMode;
+document.getElementById('demoNext').onclick = ()=>{
+  if(DEMO.running) return;
+  if(DEMO.stepIndex >= DEMO_STEPS.length-1){ exitDemoMode(); toast('🌱 Tour complete — welcome to your garden.'); return; }
+  showDemoStep(DEMO.stepIndex+1);
+};
+document.getElementById('demo-backdrop').addEventListener('click', exitDemoMode);
+
+/* =========================================================
+   SESSION SUMMARY
+   ========================================================= */
+function deriveMostUsedSpace(){
+  const tally = {};
+  ACTIVITY.log.forEach(a=>{ if(a.sourceApp) tally[a.sourceApp] = (tally[a.sourceApp]||0)+1; });
+  const top = Object.entries(tally).sort((a,b)=>b[1]-a[1])[0];
+  if(!top) return null;
+  const app = APP_REGISTRY.find(a=>a.id===top[0]);
+  return app ? {name:app.name, icon:app.icon, count:top[1]} : null;
+}
+function generateSessionMood(stats){
+  const {notes, files, ai, automations} = stats;
+  if(automations>=2) return "🌿 You spent today building systems that\u2019ll keep working for you. Automation Enthusiast energy.";
+  if(notes>=4 && files<=1) return "📝 A writing-focused session — your thoughts had room to breathe.";
+  if(files>=4 && notes<=1) return "📂 A building session — lots of structure took shape today.";
+  if(ai>=8) return "✨ You and Nexus talked a lot today. A real back-and-forth kind of session.";
+  if(notes>=1 || files>=1) return "🌱 A quiet, steady session — small additions that add up over time.";
+  return "👋 A light visit today — sometimes that's exactly what's needed.";
+}
+function showSessionSummary(){
+  const mins = getSessionMinutes();
+  const h = Math.floor(mins/60), m = mins%60;
+  const timeStr = h>0 ? `${h}h ${m}m` : `${m}m`;
+  const notesCount = ACTIVITY.log.filter(a=>a.kind==='note' && a.text.toLowerCase().includes('created')).length;
+  const filesCount = ACTIVITY.log.filter(a=>a.kind==='file' && a.text.toLowerCase().includes('created')).length;
+  const aiCount = ACTIVITY.log.filter(a=>a.kind==='ai').length;
+  const mostUsed = deriveMostUsedSpace();
+
+  const grid = document.getElementById('summaryGrid');
+  grid.innerHTML = `
+    <div class="summary-stat wide"><div class="num">⏱ ${timeStr}</div><div class="lbl">Active this session</div></div>
+    <div class="summary-stat"><div class="num">📝 ${notesCount}</div><div class="lbl">Notes created</div></div>
+    <div class="summary-stat"><div class="num">📂 ${filesCount}</div><div class="lbl">Files &amp; folders created</div></div>
+    <div class="summary-stat"><div class="num">🤖 ${aiCount}</div><div class="lbl">AI interactions</div></div>
+    <div class="summary-stat"><div class="num">🔥 ${getStreak()}</div><div class="lbl">Day streak</div></div>
+    ${mostUsed ? `<div class="summary-stat wide"><div class="num">${mostUsed.icon} ${mostUsed.name}</div><div class="lbl">Most used space</div></div>` : ''}
+  `;
+  document.getElementById('summaryMood').textContent = generateSessionMood({notes:notesCount, files:filesCount, ai:aiCount, automations:STATS.automationsCreated});
+  document.getElementById('summary-backdrop').classList.add('show');
+  document.getElementById('summary-card').classList.add('show');
+  logActivity('system', 'Viewed session summary');
+}
+function closeSessionSummary(){
+  document.getElementById('summary-backdrop').classList.remove('show');
+  document.getElementById('summary-card').classList.remove('show');
+}
+document.getElementById('summaryClose').onclick = closeSessionSummary;
+document.getElementById('summary-backdrop').addEventListener('click', closeSessionSummary);
+
+(function init(){
+  applyTheme(SETTINGS.theme);
+  loadWallpaperFromSettings();
+  WORKSPACES.init();
+  buildOrbitalDock();
+  buildWidgetRail();
+  renderOnboardingWidget();
+  updateXPBar();
+  renderNotifications();
+  maybeStartOnboarding();
+  if(ONBOARDING.done){
+    setTimeout(()=> openApp('home'), 1400);
+  }
+})();
+
+
+</script>
+</body>
+</html>
