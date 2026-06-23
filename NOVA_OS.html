@@ -2803,3 +2803,359 @@ Apps.automations = function(){
   render();
   WM.create({id:'automations', title:'Automation Engine', icon:'⚡', width:620, height:480, body});
 };
+
+/* =========================================================
+   APP SDK
+   ========================================================= */
+const SDK = { apps: null };
+function initSDK(){
+  const saved = loadState();
+  if(saved && saved.sdkApps){ SDK.apps = saved.sdkApps; return; }
+  SDK.apps = [
+    {
+      manifest: { name:'Calculator', icon:'🧮', entry:'calc.js', description:'A simple arithmetic calculator.' },
+      code: `function run(container, helpers){
+  container.innerHTML = '<input id="expr" placeholder="e.g. 12 * (4+1)" style="width:100%;margin-bottom:10px;"><div id="res" style="font-family:var(--font-mono);font-size:22px;color:var(--accent);min-height:34px;">0</div><button class="btn primary" id="go" style="margin-top:10px;">Evaluate</button>';
+  container.querySelector('#go').onclick = ()=>{
+    const v = container.querySelector('#expr').value;
+    try{ container.querySelector('#res').textContent = Function('"use strict";return ('+v+')')(); }
+    catch(e){ container.querySelector('#res').textContent = 'Error'; }
+  };
+}`
+    },
+    {
+      manifest: { name:'Sticky Clock', icon:'⏰', entry:'clock.js', description:'A live digital clock widget.' },
+      code: `function run(container, helpers){
+  container.innerHTML = '<div id="bigclock" style="font-family:var(--font-display);font-size:34px;font-weight:700;text-align:center;margin-top:30px;"></div><div style="text-align:center;color:var(--text-mid);font-size:13px;" id="bigdate"></div>';
+  function tick(){
+    const n = new Date();
+    container.querySelector('#bigclock').textContent = n.toLocaleTimeString();
+    container.querySelector('#bigdate').textContent = n.toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  }
+  tick(); setInterval(tick, 1000);
+}`
+    }
+  ];
+}
+initSDK();
+
+Apps.sdk = function(){
+  const body = document.createElement('div');
+  body.className = 'app-pad';
+  body.style.height='100%'; body.style.overflow='auto';
+  body.innerHTML = `
+    <div class="app-h">🧬 App SDK</div>
+    <div class="muted" style="margin-bottom:14px;">Drop a JSON manifest + JS entry code to add a new app to NexusOS. Apps appear below and launch in their own window.</div>
+    <div class="settings-section">
+      <h4>Manifest</h4>
+      <textarea id="sdkManifest" style="width:100%;height:90px;font-family:var(--font-mono);font-size:12px;" placeholder='{"name":"Calculator","icon":"🧮","entry":"calc.js","description":"..."}'></textarea>
+    </div>
+    <div class="settings-section">
+      <h4>Entry Code (must define: function run(container, helpers){ ... })</h4>
+      <textarea id="sdkCode" style="width:100%;height:160px;font-family:var(--font-mono);font-size:12px;" placeholder="function run(container, helpers){ container.innerHTML = '&lt;h1&gt;Hello&lt;/h1&gt;'; }"></textarea>
+    </div>
+    <button class="btn primary" id="sdkInstall">+ Install App</button>
+    <hr class="div">
+    <h4 style="font-family:var(--font-display); font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--text-low); margin-bottom:10px;">Installed Custom Apps</h4>
+    <div id="sdkList"></div>
+  `;
+  function render(){
+    const list = body.querySelector('#sdkList');
+    list.innerHTML='';
+    if(SDK.apps.length===0){ list.innerHTML = '<div class="muted">No custom apps yet.</div>'; return; }
+    SDK.apps.forEach((app,i)=>{
+      const el = document.createElement('div');
+      el.className = 'list-row';
+      el.innerHTML = `<div style="display:flex;align-items:center;gap:10px;"><span style="font-size:20px;">${app.manifest.icon||'🧩'}</span><div><div style="font-weight:600;">${app.manifest.name}</div><div class="muted">${app.manifest.description||app.manifest.entry}</div></div></div>`;
+      const actions = document.createElement('div');
+      actions.style.display='flex'; actions.style.gap='6px';
+      const launchBtn = document.createElement('button'); launchBtn.className='btn primary'; launchBtn.textContent='Launch';
+      launchBtn.onclick = ()=> launchSDKApp(app);
+      const delBtn = document.createElement('button'); delBtn.className='btn danger'; delBtn.textContent='Remove';
+      delBtn.onclick = ()=>{ SDK.apps.splice(i,1); saveState(); render(); };
+      actions.append(launchBtn, delBtn);
+      el.appendChild(actions);
+      list.appendChild(el);
+    });
+  }
+  body.querySelector('#sdkInstall').onclick = ()=>{
+    const mText = body.querySelector('#sdkManifest').value.trim();
+    const cText = body.querySelector('#sdkCode').value.trim();
+    if(!mText || !cText){ toast('Provide both a manifest and entry code'); return; }
+    let manifest;
+    try{ manifest = JSON.parse(mText); }
+    catch(e){ toast('Invalid JSON manifest: '+e.message); return; }
+    if(!manifest.name){ toast('Manifest must include a "name" field'); return; }
+    if(!/function\s+run\s*\(/.test(cText)){ toast('Entry code must define function run(container, helpers)'); return; }
+    SDK.apps.push({manifest, code:cText});
+    saveState(); render();
+    toast(`Installed "${manifest.name}"`);
+    logActivity('plugin', `Installed custom app "${manifest.name}"`);
+    body.querySelector('#sdkManifest').value=''; body.querySelector('#sdkCode').value='';
+  };
+  render();
+  WM.create({id:'sdk', title:'App SDK', icon:'🧬', width:620, height:560, body});
+};
+
+function launchSDKApp(app){
+  const body = document.createElement('div');
+  body.className = 'app-pad';
+  body.style.height='100%';
+  const container = document.createElement('div');
+  container.style.height='100%';
+  body.appendChild(container);
+  try{
+    const fn = new Function(app.code + '\nreturn run;')();
+    fn(container, { toast, FS, NOTES, CAL, openApp });
+  }catch(e){
+    container.innerHTML = `<div style="color:var(--danger)">Error running app: ${e.message}</div>`;
+  }
+  WM.create({id:'sdkapp-'+app.manifest.name, title:app.manifest.name, icon:app.manifest.icon||'🧩', width:420, height:340, body});
+}
+
+/* =========================================================
+   PROCESS MANAGER
+   ========================================================= */
+Apps.taskmgr = function(){
+  const body = document.createElement('div');
+  body.className = 'app-pad';
+  body.style.height='100%'; body.style.overflow='auto';
+  body.innerHTML = `
+    <div class="app-h">📊 Process Manager</div>
+    <div class="muted" style="margin-bottom:12px;">Live view of running NexusOS apps and simulated system load.</div>
+    <div class="settings-section">
+      <h4>System Load</h4>
+      <div style="display:flex; gap:20px; margin-bottom:6px;">
+        <div style="flex:1;">
+          <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-mid); margin-bottom:4px;"><span>CPU</span><span id="cpuPct">0%</span></div>
+          <div style="height:8px; border-radius:6px; background:rgba(255,255,255,0.06); overflow:hidden;"><div id="cpuBar" style="height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); transition:width .4s;"></div></div>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-mid); margin-bottom:4px;"><span>Memory</span><span id="memPct">0%</span></div>
+          <div style="height:8px; border-radius:6px; background:rgba(255,255,255,0.06); overflow:hidden;"><div id="memBar" style="height:100%; width:0%; background:linear-gradient(90deg,var(--success),var(--accent)); transition:width .4s;"></div></div>
+        </div>
+      </div>
+    </div>
+    <h4 style="font-family:var(--font-display); font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--text-low); margin:18px 0 10px;">Running Processes</h4>
+    <div id="procList"></div>
+  `;
+  let timer;
+  function render(){
+    const n = Object.keys(WM.windows).length;
+    const cpu = Math.min(96, 6 + n*9 + Math.round(Math.random()*6));
+    const mem = Math.min(92, 14 + n*7 + Math.round(Math.random()*4));
+    body.querySelector('#cpuPct').textContent = cpu+'%';
+    body.querySelector('#cpuBar').style.width = cpu+'%';
+    body.querySelector('#memPct').textContent = mem+'%';
+    body.querySelector('#memBar').style.width = mem+'%';
+
+    const list = body.querySelector('#procList');
+    list.innerHTML='';
+    if(n<=1){ list.innerHTML='<div class="muted">No other apps running.</div>'; }
+    Object.entries(WM.windows).forEach(([id,w])=>{
+      if(id==='taskmgr') return;
+      const procCpu = (1 + Math.random()*8).toFixed(1);
+      const procMem = (20 + Math.random()*180).toFixed(0);
+      const el = document.createElement('div');
+      el.className = 'list-row';
+      el.innerHTML = `<div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">${w.icon}</span><div><div style="font-weight:600;">${w.title}</div><div class="muted" style="font-family:var(--font-mono);">PID ${1000+Math.abs(id.split('').reduce((a,c)=>a+c.charCodeAt(0),0))%9000} · ${procCpu}% CPU · ${procMem} MB</div></div></div>`;
+      const endBtn = document.createElement('button'); endBtn.className='btn danger'; endBtn.textContent='End Task';
+      endBtn.onclick = ()=>{ WM.close(id); render(); };
+      el.appendChild(endBtn);
+      list.appendChild(el);
+    });
+  }
+  render();
+  timer = setInterval(render, 1800);
+  WM.create({id:'taskmgr', title:'Process Manager', icon:'📊', width:540, height:480, body, onClose:()=>clearInterval(timer)});
+};
+
+
+/* =========================================================
+   MEMORY CONSTELLATION
+   ========================================================= */
+Apps.constellation = function(){
+  onboardingNotify('open_constellation');
+  const body = document.createElement('div');
+  body.style.height='100%'; body.style.position='relative'; body.style.overflow='hidden';
+  body.style.background='linear-gradient(160deg,#f7f8f2 0%,#eef2e8 100%)';
+  body.innerHTML = `
+    <div style="position:absolute; top:12px; left:16px; z-index:5; font-family:var(--font-display); font-size:11px; letter-spacing:3px; color:var(--text-low); text-transform:uppercase;">Memory Constellation</div>
+    <div style="position:absolute; top:12px; right:14px; z-index:5; display:flex; gap:8px; font-family:var(--font-mono); font-size:10px; color:var(--text-low);">
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:rgba(245,143,92,0.9);display:inline-block;"></span>Notes</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:rgba(125,167,140,0.9);display:inline-block;"></span>Folders</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:rgba(53,133,142,0.9);display:inline-block;"></span>Files</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:rgba(194,208,153,0.9);display:inline-block;"></span>Images</span>
+    </div>
+    <canvas id="constCanvas" style="width:100%; height:100%; display:block; cursor:default;"></canvas>
+    <div id="constTooltip" style="position:absolute; pointer-events:none; opacity:0; transition:opacity .18s ease; z-index:10; background:rgba(255,255,255,0.92); border:1px solid var(--border-strong); border-radius:12px; padding:10px 14px; max-width:220px; box-shadow:0 8px 24px rgba(53,133,142,0.15); backdrop-filter:blur(8px);"></div>
+  `;
+  const canvas = body.querySelector('#constCanvas');
+  const ctx = canvas.getContext('2d');
+  const tooltip = body.querySelector('#constTooltip');
+
+  // Color by type (RGB strings only)
+  function colorFor(type, ext){
+    if(type==='note')   return {r:'245,143,92', glow:'rgba(245,143,92,0.35)'};
+    if(type==='folder') return {r:'125,167,140', glow:'rgba(125,167,140,0.3)'};
+    const imgExts = ['png','jpg','jpeg','gif','webp','svg'];
+    if(imgExts.includes(ext||'')) return {r:'194,208,153', glow:'rgba(194,208,153,0.35)'};
+    if(ext==='js'||ext==='ts') return {r:'53,133,142', glow:'rgba(53,133,142,0.3)'};
+    return {r:'53,133,142', glow:'rgba(53,133,142,0.28)'};
+  }
+
+  function buildNodes(){
+    const nodes = [];
+    FS.flatten().forEach(f=>{
+      const c = colorFor(f.item.type, f.item.ext);
+      nodes.push({
+        label:f.item.name, type:f.item.type, ext:f.item.ext||'',
+        group:f.path[0]||'root', path:f.path, item:f.item,
+        col:c, x:0, y:0, vx:0, vy:0, tx:0, ty:0,
+        phase: Math.random()*Math.PI*2, // for pulsing offset
+        size: f.item.type==='folder' ? 8 : 5.5,
+      });
+    });
+    NOTES.list.forEach(n=>{
+      const c = colorFor('note','');
+      // size grows with content length, capped
+      const sz = Math.min(10, 5 + Math.floor(stripHtml(n.body||'').length/120));
+      nodes.push({
+        label:n.title||'Untitled', type:'note', ext:'', group:'Notes',
+        noteId:n.id, note:n, col:c, x:0, y:0, vx:0, vy:0, tx:0, ty:0,
+        phase:Math.random()*Math.PI*2, size:sz
+      });
+    });
+    return nodes;
+  }
+  let nodes = buildNodes();
+
+  function resize(){
+    canvas.width = body.clientWidth;
+    canvas.height = body.clientHeight;
+    assignPositions();
+  }
+  function assignPositions(){
+    const groups = {};
+    nodes.forEach(n=>{ groups[n.group]=groups[n.group]||[]; groups[n.group].push(n); });
+    const keys = Object.keys(groups);
+    keys.forEach((g,gi)=>{
+      const a0 = (gi/keys.length)*Math.PI*2;
+      const cx = 0.5 + Math.cos(a0)*0.30;
+      const cy = 0.5 + Math.sin(a0)*0.30;
+      groups[g].forEach((nd,ni)=>{
+        const a2 = (ni/groups[g].length)*Math.PI*2;
+        const spread = Math.min(0.14, 0.04 + groups[g].length*0.012);
+        nd.tx = cx + Math.cos(a2)*spread;
+        nd.ty = cy + Math.sin(a2)*spread;
+        if(!nd.x){ nd.x = nd.tx + (Math.random()-0.5)*0.06; nd.y = nd.ty + (Math.random()-0.5)*0.06; }
+      });
+    });
+  }
+
+  // Relationship engine
+  function tokenize(label){ return label.toLowerCase().replace(/\.[a-z0-9]+$/,'').split(/[\s_\-]+/).filter(w=>w.length>2); }
+  const relationLinks = [];
+  for(let i=0;i<nodes.length;i++){
+    for(let j=i+1;j<nodes.length;j++){
+      const a=nodes[i],b=nodes[j];
+      if(a.group===b.group) continue;
+      const shared = tokenize(a.label).find(w=>tokenize(b.label).includes(w));
+      if(shared) relationLinks.push({a,b,word:shared});
+    }
+  }
+
+  let hoveredNode = null, mouseX=0, mouseY=0;
+  canvas.addEventListener('mousemove', (e)=>{
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX-rect.left; mouseY = e.clientY-rect.top;
+    let found = null;
+    nodes.forEach(n=>{
+      const px=n.x*canvas.width, py=n.y*canvas.height;
+      if(Math.hypot(mouseX-px,mouseY-py) < n.size*2+8) found=n;
+    });
+    if(found !== hoveredNode){
+      hoveredNode = found;
+      canvas.style.cursor = found ? 'pointer' : 'default';
+      if(found){
+        // build tooltip
+        let html = `<div style="font-family:var(--font-display);font-weight:600;font-size:13px;margin-bottom:4px;">${found.label}</div>`;
+        html += `<div style="font-family:var(--font-mono);font-size:10px;color:var(--text-low);text-transform:uppercase;margin-bottom:6px;">${found.type}${found.ext?' · .'+found.ext:''}</div>`;
+        if(found.type==='note' && found.note){
+          const plain = stripHtml(found.note.body||'');
+          const preview = plain.slice(0,80).trim();
+          if(preview) html += `<div style="font-size:12px;color:var(--text-mid);line-height:1.5;">${preview}${plain.length>80?'…':''}</div>`;
+          const tags = (found.note.tags||[]).map(t=>tagChipHtml(t)).join('');
+          if(tags) html += `<div style="margin-top:6px;">${tags}</div>`;
+        }
+        html += `<div style="font-size:10px;color:var(--accent);margin-top:8px;font-family:var(--font-mono);">Click to open →</div>`;
+        tooltip.innerHTML = html;
+        // position tooltip so it stays in bounds
+        const tx = mouseX + 16, ty = mouseY - 10;
+        const maxX = body.clientWidth - 240;
+        tooltip.style.left = Math.min(tx, maxX)+'px';
+        tooltip.style.top = Math.max(4, ty)+'px';
+        tooltip.style.opacity = '1';
+      } else {
+        tooltip.style.opacity = '0';
+      }
+    }
+  });
+  canvas.addEventListener('mouseleave', ()=>{ hoveredNode=null; tooltip.style.opacity='0'; canvas.style.cursor='default'; });
+  canvas.addEventListener('click', ()=>{
+    if(!hoveredNode) return;
+    const n=hoveredNode;
+    logActivity('ai', `Opened "${n.label}" from Memory Constellation`);
+    tooltip.style.opacity='0';
+    if(n.type==='note'){ NOTES.activeId=n.noteId; openApp('notes'); }
+    else if(n.type==='folder'){ openApp('explorer'); }
+    else openFileInEditor(n.path, n.item);
+  });
+
+  let frameCount = 0;
+  function draw(){
+    frameCount++;
+    const t = Date.now()/1000;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // subtle background grid dots
+    ctx.fillStyle='rgba(53,133,142,0.04)';
+    for(let gx=40;gx<canvas.width;gx+=46){
+      for(let gy=40;gy<canvas.height;gy+=46){
+        ctx.beginPath(); ctx.arc(gx,gy,1,0,Math.PI*2); ctx.fill();
+      }
+    }
+
+    // relation links (soft organic curves)
+    relationLinks.forEach(link=>{
+      const a=link.a,b=link.b;
+      const ax=a.x*canvas.width, ay=a.y*canvas.height;
+      const bx=b.x*canvas.width, by=b.y*canvas.height;
+      const cx2=(ax+bx)/2, cy2=(ay+by)/2 + (((link.a.size+link.b.size)%3===0)?-35:35);
+      ctx.beginPath(); ctx.moveTo(ax,ay); ctx.quadraticCurveTo(cx2,cy2,bx,by);
+      ctx.strokeStyle='rgba(245,143,92,0.18)'; ctx.lineWidth=1;
+      ctx.setLineDash([3,6]); ctx.stroke(); ctx.setLineDash([]);
+      // relation word label at midpoint
+      if(hoveredNode===a||hoveredNode===b){
+        const mx2=(ax+cx2+bx)/3, my2=(ay+cy2+by)/3;
+        ctx.font='9px "JetBrains Mono",monospace';
+        ctx.fillStyle='rgba(245,143,92,0.6)'; ctx.fillText(link.word, mx2, my2);
+      }
+    });
+
+    // within-group connectors
+    const groups2 = {};
+    nodes.forEach(n=>{ groups2[n.group]=groups2[n.group]||[]; groups2[n.group].push(n); });
+    Object.values(groups2).forEach(list=>{
+      for(let i=0;i<list.length;i++){
+        for(let j=i+1;j<list.length;j++){
+          const a=list[i],b=list[j];
+          ctx.beginPath();
+          ctx.moveTo(a.x*canvas.width,a.y*canvas.height);
+          ctx.lineTo(b.x*canvas.width,b.y*canvas.height);
+          ctx.strokeStyle=`rgba(${a.col.r},0.14)`; ctx.lineWidth=1; ctx.stroke();
+        }
+      }
+    });
+
+    
